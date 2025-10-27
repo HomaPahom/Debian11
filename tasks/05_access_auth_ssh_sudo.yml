@@ -1,0 +1,299 @@
+---
+    - name: "5.1.1 | Ensure cron daemon is enabled and running"
+      ansible.builtin.systemd:
+        name: cron
+        state: started
+        enabled: true
+
+    - name: "5.1.2 | Ensure permissions on /etc/crontab are configured"
+      ansible.builtin.file:
+        path: /etc/crontab
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: "5.1.3 | Ensure permissions on /etc/cron.hourly are configured"
+      ansible.builtin.file:
+        path: /etc/cron.hourly
+        owner: root
+        group: root
+        mode: '0700'
+        state: directory
+
+    - name: "5.1.4 | Ensure permissions on /etc/cron.daily are configured"
+      ansible.builtin.file:
+        path: /etc/cron.daily
+        owner: root
+        group: root
+        mode: '0700'
+        state: directory
+
+    - name: "5.1.5 | Ensure permissions on /etc/cron.weekly are configured"
+      ansible.builtin.file:
+        path: /etc/cron.weekly
+        owner: root
+        group: root
+        mode: '0700'
+        state: directory
+
+    - name: "5.1.6 | Ensure permissions on /etc/cron.monthly are configured"
+      ansible.builtin.file:
+        path: /etc/cron.monthly
+        owner: root
+        group: root
+        mode: '0700'
+        state: directory
+
+    - name: "5.1.7 | Ensure permissions on /etc/cron.d are configured"
+      ansible.builtin.file:
+        path: /etc/cron.d
+        owner: root
+        group: root
+        mode: '0700'
+        state: directory
+
+    - name: "5.1.8 | Ensure cron is restricted to authorized users"
+      block:
+        - name: "Remove /etc/cron.deny if present"
+          ansible.builtin.file:
+            path: /etc/cron.deny
+            state: absent
+
+        - name: "Ensure /etc/cron.allow exists and is properly secured"
+          ansible.builtin.file:
+            path: /etc/cron.allow
+            owner: root
+            group: root
+            mode: '0600'
+            state: touch
+
+    - name: "5.1.9 | Ensure at is restricted to authorized users"
+      block:
+        - name: "Remove /etc/at.deny if present"
+          ansible.builtin.file:
+            path: /etc/at.deny
+            state: absent
+
+        - name: "Ensure /etc/at.allow exists and is properly secured"
+          ansible.builtin.file:
+            path: /etc/at.allow
+            owner: root
+            group: root
+            mode: '0600'
+            state: touch
+
+    - name: "5.2.1 | Ensure permissions on /etc/ssh/sshd_config are configured"
+      ansible.builtin.file:
+        path: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: "5.2.2 | Ensure permissions on SSH private host key files are configured"
+      block:
+        - name: "Find ssh_host private keys"
+          ansible.builtin.find:
+            paths: /etc/ssh
+            patterns: 'ssh_host_*_key'
+          register: discovered_ssh_host_priv_keys
+
+        - name: "Set permissions on private keys"
+          ansible.builtin.file:
+            path: "{{ item.path }}"
+            owner: root
+            group: root
+            mode: '0600'
+          loop: "{{ discovered_ssh_host_priv_keys.files }}"
+          loop_control:
+            label: "{{ item.path }}"
+
+    - name: "5.2.3 | Ensure permissions on SSH public host key files are configured"
+      block:
+        - name: "Find ssh_host public keys"
+          ansible.builtin.find:
+            paths: /etc/ssh
+            patterns: 'ssh_host_*_key.pub'
+          register: discovered_ssh_host_pub_keys
+
+        - name: "Set permissions on public keys"
+          ansible.builtin.file:
+            path: "{{ item.path }}"
+            owner: root
+            group: root
+            mode: '0644'
+          loop: "{{ discovered_ssh_host_pub_keys.files }}"
+          loop_control:
+            label: "{{ item.path }}"
+
+   #- name: "5.2.4 | Ensure SSH access is limited"
+      #block:
+        #- name: "Allow only specific users"
+          #ansible.builtin.lineinfile:
+            #path: /etc/ssh/sshd_config
+            #regexp: '^AllowUsers|^#AllowUsers'
+            #line: 'AllowUsers user1 user2'
+
+        #- name: "Allow only specific groups"
+          #ansible.builtin.lineinfile:
+            #path: /etc/ssh/sshd_config
+            #regexp: '^AllowGroups|^#AllowGroups'
+            #line: 'AllowGroups sshusers'
+
+    - name: "5.2.5 | Ensure SSH LogLevel is appropriate"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^LogLevel|^#LogLevel'
+        line: 'LogLevel INFO'
+
+    #- name: "5.2.7 | Ensure SSH root login is disabled"
+      #ansible.builtin.lineinfile:
+        #path: /etc/ssh/sshd_config
+        #regexp: '^PermitRootLogin|^#PermitRootLogin'
+        #line: 'PermitRootLogin no'
+
+    - name: "5.2.9 | Ensure SSH PermitEmptyPasswords is disabled"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitEmptyPasswords|^#PermitEmptyPasswords'
+        line: 'PermitEmptyPasswords no'
+      notify: restart sshd
+      tags:
+        - level1-server
+        - level1-workstation
+        - patch
+        - ssh
+        - rule_5.2.9
+
+    - name: "5.2.10 | Ensure SSH PermitUserEnvironment is disabled"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitUserEnvironment|^#PermitUserEnvironment'
+        line: 'PermitUserEnvironment no'
+      notify: restart sshd
+      tags:
+        - level1-server
+        - level1-workstation
+        - patch
+        - ssh
+        - rule_5.2.10
+
+    - name: "5.2.17 | Ensure SSH warning banner is configured"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^Banner|^#Banner'
+        line: 'Banner /etc/issue.net'
+
+    - name: "5.2.18 | Ensure SSH MaxAuthTries is set to 4 or less"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^MaxAuthTries|^#MaxAuthTries'
+        line: 'MaxAuthTries 4'
+
+    - name: "5.2.19 | Ensure SSH MaxStartups is configured"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^MaxStartups|^#MaxStartups'
+        line: 'MaxStartups 10:30:60'
+
+    - name: "5.2.20 | Ensure SSH MaxSessions is set to 10 or less"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^MaxSessions|^#MaxSessions'
+        line: 'MaxSessions 10'
+
+    - name: "5.2.21 | Ensure SSH LoginGraceTime is set to one minute or less"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^LoginGraceTime|^#LoginGraceTime'
+        line: 'LoginGraceTime 60'
+
+    - name: "5.2.22 | Ensure SSH Idle Timeout Interval is configured"
+      block:
+        - name: "Set ClientAliveInterval"
+          ansible.builtin.lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: '^ClientAliveInterval|^#ClientAliveInterval'
+            line: 'ClientAliveInterval 300'
+
+        - name: "Set ClientAliveCountMax"
+          ansible.builtin.lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: '^ClientAliveCountMax|^#ClientAliveCountMax'
+            line: 'ClientAliveCountMax 0'
+
+    - name: "5.3.1 | Ensure sudo is installed"
+      ansible.builtin.package:
+        name: sudo
+        state: present
+
+    - name: "5.3.2 | Ensure sudo commands use pty"
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        regexp: '^Defaults\s+use_'
+        line: 'Defaults        use_pty'
+        insertafter: '^\s*Defaults'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: "5.3.3 | Ensure sudo log file exists"
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        regexp: '^Defaults\s+logfile'
+        line: 'Defaults        logfile="/var/log/sudo.log"'
+        insertafter: '^\s*Defaults'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: "5.3.4 | Ensure users must provide password for escalation"
+      ansible.builtin.replace:
+        path: /etc/sudoers
+        regexp: '^([^#].*)NOPASSWD(.*)'
+        replace: '\1PASSWD\2'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    #- name: "5.3.5 | Ensure re-authentication for privilege escalation is not disabled globally"
+      #ansible.builtin.replace:
+        #path: /etc/sudoers
+        #regexp: '^([^#].*)!authenticate(.*)'
+        #replace: '\1authenticate\2'
+        #validate: '/usr/sbin/visudo -cf %s'
+
+    - name: "5.3.6 | Ensure sudo authentication timeout is configured correctly"
+      block:
+        - name: "Check if timestamp_timeout is already set"
+          ansible.builtin.shell: grep -is 'timestamp_timeout' /etc/sudoers /etc/sudoers.d/* | cut -d":" -f1 | uniq | sort
+          changed_when: false
+          failed_when: false
+          register: sudo_timeout_files
+
+        - name: "Set timeout if not found"
+          ansible.builtin.lineinfile:
+            path: /etc/sudoers
+            regexp: '^\s*Defaults\s+timestamp_timeout='
+            line: 'Defaults       timestamp_timeout=5'
+            insertafter: '^\s*Defaults'
+            validate: '/usr/sbin/visudo -cf %s'
+          when: sudo_timeout_files.stdout | length == 0
+
+        - name: "Update existing timeout if found"
+          ansible.builtin.replace:
+            path: "{{ item }}"
+            regexp: 'timestamp_timeout=(\d+)'
+            replace: 'timestamp_timeout=5'
+            validate: '/usr/sbin/visudo -cf %s'
+          loop: "{{ sudo_timeout_files.stdout_lines }}"
+          when: sudo_timeout_files.stdout | length > 0
+
+    #- name: "5.3.7 | Ensure access to the su command is restricted"
+      #block:
+        #- name: "Ensure group 'wheel' exists"
+          #ansible.builtin.group:
+            #name: wheel
+            #state: present
+
+        #- name: "Ensure pam_wheel.so is required for su"
+          #ansible.builtin.lineinfile:
+            #path: /etc/pam.d/su
+            #regexp: '^(#)?auth\s+required\s+pam_wheel\.so'
+            #line: 'auth           required        pam_wheel.so use_uid group=wheel'
+            #create: falseE
+
+

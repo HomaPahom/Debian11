@@ -1,0 +1,407 @@
+---
+    - name: "4.1.1.1 | Ensure auditd and audispd-plugins are installed"
+      ansible.builtin.package:
+        name:
+          - auditd
+          - audispd-plugins
+        state: present
+      tags: [auditd]
+
+    - name: "4.1.1.2 | Ensure auditd service is enabled and active"
+      ansible.builtin.systemd:
+        name: auditd
+        state: started
+        enabled: true
+        masked: false
+      tags: [auditd]
+
+    - name: "4.1.1.3 | Ensure auditing for processes that start prior to auditd is enabled"
+      block:
+        - name: "Get GRUB_CMDLINE_LINUX content"
+          ansible.builtin.shell: grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | cut -f2 -d'"'
+          register: grub_line
+          changed_when: false
+          failed_when: false
+
+        - name: "Add audit=1 if missing"
+          ansible.builtin.lineinfile:
+            path: /etc/default/grub
+            regexp: '^GRUB_CMDLINE_LINUX='
+            line: 'GRUB_CMDLINE_LINUX="{{ grub_line.stdout }} audit=1"'
+          when: "'audit=' not in grub_line.stdout"
+
+        - name: "Update audit=1 if already present"
+          ansible.builtin.replace:
+            path: /etc/default/grub
+            regexp: 'audit=([0-9]+)'
+            replace: 'audit=1'
+            after: '^GRUB_CMDLINE_LINUX="'
+            before: '"'
+          when: "'audit=' in grub_line.stdout"
+
+        - name: "Update GRUB after audit setting"
+          ansible.builtin.shell: update-grub
+          changed_when: true
+      tags: [auditd]
+
+    - name: "4.1.1.4 | Ensure audit_backlog_limit is sufficient"
+      block:
+        - name: "Get GRUB_CMDLINE_LINUX content"
+          ansible.builtin.shell: grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | cut -f2 -d'"'
+          register: grub_line
+          changed_when: false
+          failed_when: false
+
+        - name: "Add audit_backlog_limit if missing"
+          ansible.builtin.lineinfile:
+            path: /etc/default/grub
+            regexp: '^GRUB_CMDLINE_LINUX='
+            line: 'GRUB_CMDLINE_LINUX="{{ grub_line.stdout }} audit_backlog_limit=8192"'
+          when: "'audit_backlog_limit=' not in grub_line.stdout"
+
+        - name: "Update audit_backlog_limit value if exists"
+          ansible.builtin.replace:
+            path: /etc/default/grub
+            regexp: 'audit_backlog_limit=([0-9]+)'
+            replace: 'audit_backlog_limit=8192'
+            after: '^GRUB_CMDLINE_LINUX="'
+            before: '"'
+          when: "'audit_backlog_limit=' in grub_line.stdout"
+
+        - name: "Update GRUB after backlog setting"
+          ansible.builtin.shell: update-grub
+          changed_when: true
+      tags: [auditd]
+
+    - name: "4.1.2.1 | Ensure audit log storage size is configured"
+      ansible.builtin.lineinfile:
+        path: /etc/audit/auditd.conf
+        regexp: "^max_log_file( |=)"
+        line: "max_log_file = 20"
+        state: present
+      tags: [auditd]
+
+    - name: "4.1.2.2 | Ensure audit logs are not automatically deleted"
+      ansible.builtin.lineinfile:
+        path: /etc/audit/auditd.conf
+        regexp: "^max_log_file_action"
+        line: "max_log_file_action = keep_logs"
+        state: present
+      tags: [auditd]
+
+    - name: "4.1.2.3 | Ensure system is disabled when audit logs are full"
+      block:
+        - name: "Set actions for low disk space in audit logs"
+          ansible.builtin.lineinfile:
+            path: /etc/audit/auditd.conf
+            regexp: "{{ item.regexp }}"
+            line: "{{ item.line }}"
+            state: present
+          loop:
+            - { regexp: '^space_left_action', line: 'space_left_action = email' }
+            - { regexp: '^action_mail_acct', line: 'action_mail_acct = root' }
+            - { regexp: '^admin_space_left_action', line: 'admin_space_left_action = halt' }
+
+        - name: "Restart auditd service to apply configuration"
+          ansible.builtin.systemd:
+            name: auditd
+            state: restarted
+            enabled: true
+      tags: [auditd]
+
+    - name: "Write CIS audit rules"
+      ansible.builtin.copy:
+        dest: /etc/audit/rules.d/cis_4_1_3.rules
+        owner: root
+        group: root
+        mode: '0640'
+        content: |
+          ## 4.1.3.1 Changes to sudoers
+          -w /etc/sudoers -p wa -k scope
+          -w /etc/sudoers.d/ -p wa -k scope
+
+          ## 4.1.3.2 Actions as another user (sudo/su)
+          -a always,exit -F arch=b64 -S execve -C uid!=euid -F euid=0 -k sudo
+          -a always,exit -F arch=b32 -S execve -C uid!=euid -F euid=0 -k sudo
+
+          ## 4.1.3.3 Modifications to sudo log file
+          -w /var/log/sudo.log -p wa -k sudo_log
+
+          ## 4.1.3.4 Date and time changes
+          -a always,exit -F arch=b64 -S adjtimex,settimeofday,clock_settime -k time-change
+          -a always,exit -F arch=b32 -S adjtimex,settimeofday,clock_settime -k time-change
+          -w /etc/localtime -p wa -k time-change
+
+          ## 4.1.3.5 Network environment changes
+          -a always,exit -F arch=b64 -S sethostname,setdomainname -k system-locale
+          -a always,exit -F arch=b32 -S sethostname,setdomainname -k system-locale
+          -w /etc/issue -p wa -k system-locale
+          -w /etc/issue.net -p wa -k system-locale
+          -w /etc/hosts -p wa -k system-locale
+          -w /etc/network/ -p wa -k system-locale
+
+          ## 4.1.3.6 Privileged commands usage
+          -a always,exit -F arch=b64 -S execve -C uid!=euid -F euid=0 -k privileged
+          -a always,exit -F arch=b32 -S execve -C uid!=euid -F euid=0 -k privileged
+
+          ## 4.1.3.7 Unsuccessful unauthorized file access
+          -a always,exit -F arch=b64 -S open,openat,creat,truncate,ftruncate -F exit=-EACCES -k access
+          -a always,exit -F arch=b64 -S open,openat,creat,truncate,ftruncate -F exit=-EPERM  -k access
+          -a always,exit -F arch=b32 -S open,openat,creat,truncate,ftruncate -F exit=-EACCES -k access
+          -a always,exit -F arch=b32 -S open,openat,creat,truncate,ftruncate -F exit=-EPERM  -k access
+
+          ## 4.1.3.8 User/group modifications
+          -w /etc/passwd -p wa -k identity
+          -w /etc/group -p wa -k identity
+          -w /etc/shadow -p wa -k identity
+          -w /etc/gshadow -p wa -k identity
+          -w /etc/security/opasswd -p wa -k identity
+
+          ## 4.1.3.9 DAC permission modifications
+          -a always,exit -F arch=b64 -S chmod,fchmod,fchmodat,chown,fchown,fchownat -k perm_mod
+          -a always,exit -F arch=b32 -S chmod,fchmod,fchmodat,chown,fchown,fchownat -k perm_mod
+          -a always,exit -F arch=b64 -S setxattr,lsetxattr,fsetxattr,removexattr,lremovexattr,fremovexattr -k perm_mod
+          -a always,exit -F arch=b32 -S setxattr,lsetxattr,fsetxattr,removexattr,lremovexattr,fremovexattr -k perm_mod
+
+          ## 4.1.3.10 Filesystem mounts
+          -a always,exit -F arch=b64 -S mount -k mounts
+          -a always,exit -F arch=b32 -S mount -k mounts
+
+          ## 4.1.3.11 Session initiation
+          -w /var/run/utmp -p wa -k session
+          -w /var/log/wtmp -p wa -k session
+          -w /var/log/btmp -p wa -k session
+
+          ## 4.1.3.12 Login/logout events
+          -w /var/log/faillog -p wa -k logins
+          -w /var/log/lastlog -p wa -k logins
+          -w /var/log/tallylog -p wa -k logins
+
+          ## 4.1.3.13 File deletions by users (UID>=1000)
+          -a always,exit -F arch=b64 -S unlink,unlinkat,rename,renameat -F auid>=1000 -F auid!=4294967295 -k delete
+          -a always,exit -F arch=b32 -S unlink,unlinkat,rename,renameat -F auid>=1000 -F auid!=4294967295 -k delete
+
+          ## 4.1.3.14 MAC policy changes (SELinux/AppArmor)
+          -w /etc/selinux/ -p wa -k MAC-policy
+          -w /usr/share/selinux/ -p wa -k MAC-policy
+          -w /etc/apparmor/ -p wa -k MAC-policy
+          -w /etc/apparmor.d/ -p wa -k MAC-policy
+
+          ## 4.1.3.15–18 Specific tools
+          -w /usr/bin/chcon   -p x -k MAC-policy
+          -w /usr/bin/setfacl -p x -k perm_mod
+          -w /usr/bin/chacl   -p x -k perm_mod
+          -w /usr/sbin/usermod -p x -k identity
+
+          ## 4.1.3.19 Kernel module load/unload
+          -w /sbin/insmod  -p x -k modules
+          -w /sbin/rmmod   -p x -k modules
+          -w /sbin/modprobe -p x -k modules
+          -a always,exit -F arch=b64 -S init_module,finit_module,delete_module -k modules
+          -a always,exit -F arch=b32 -S init_module,finit_module,delete_module -k modules
+
+          ## 4.1.3.20 Audit configuration immutable (last rule)
+          -e 2
+
+    - name: "Load rules and restart auditd"
+      block:
+        - name: Rebuild and load rules via augenrules
+          ansible.builtin.shell: augenrules --load
+          changed_when: true
+        - name: Ensure auditd running
+          ansible.builtin.systemd:
+            name: auditd
+            state: started
+            enabled: true
+
+    - name: "Verify rules in kernel vs on-disk"
+      ansible.builtin.shell: augenrules --check
+      changed_when: false
+      register: audit_check
+
+    - name: "Show verification output"
+      ansible.builtin.debug:
+        var: audit_check.stdout
+
+    - name: "4.1.4.1 | Discover audit log file path"
+      ansible.builtin.shell: grep ^log_file /etc/audit/auditd.conf | awk '{ print $NF }'
+      register: audit_log_path
+      changed_when: false
+      failed_when: false
+
+    - name: "4.1.4.1–4.1.4.3 | Set permissions and ownership for audit log file"
+      ansible.builtin.file:
+        path: "{{ audit_log_path.stdout | default('/var/log/audit/audit.log') }}"
+        owner: root
+        group: root
+        mode: '0640'
+
+    - name: "4.1.4.4 | Ensure audit log directory is 0750 or more restrictive"
+      ansible.builtin.file:
+        path: "{{ (audit_log_path.stdout | default('/var/log/audit/audit.log')) | dirname }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: "4.1.4.5–4.1.4.7 | Ensure audit configuration files are owned by root:root and 0640"
+      ansible.builtin.file:
+        path: "{{ item }}"
+        owner: root
+        group: root
+        mode: '0640'
+      loop:
+        - /etc/audit/auditd.conf
+        - /etc/audit/audit.rules
+        - /etc/audit/rules.d/
+
+    - name: "4.1.4.8–4.1.4.10 | Ensure audit tools are owned by root:root and 0755"
+      ansible.builtin.file:
+        path: "{{ item }}"
+        owner: root
+        group: root
+        mode: '0755'
+      loop:
+        - /sbin/auditctl
+        - /sbin/aureport
+        - /sbin/ausearch
+        - /sbin/autrace
+        - /sbin/auditd
+        - /sbin/augenrules
+
+    - name: "4.2.1.1.1 | PATCH | Ensure systemd-journal-remote is installed"
+      ansible.builtin.package:
+        name: systemd-journal-remote
+        state: present
+      tags:
+        - level1-server
+        - level1-workstation
+        - manual
+        - patch
+        - journald
+        - rule_4.2.1.1.1
+
+    - name: "4.2.1.1.2 | PATCH | Ensure systemd-journal-remote is configured"
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/journal-upload.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        create: yes
+      loop:
+        - { regexp: '^URL=', line: 'URL=https://logserver.example.com:19532' }
+        - { regexp: '^ServerKeyFile=', line: 'ServerKeyFile=/etc/ssl/private/journal-upload.pem' }
+        - { regexp: '^ServerCertificateFile=', line: 'ServerCertificateFile=/etc/ssl/certs/journal-upload.crt' }
+        - { regexp: '^TrustedCertificateFile=', line: 'TrustedCertificateFile=/etc/ssl/certs/ca-certificates.crt' }
+      notify: Restart journald
+      tags:
+        - level1-server
+        - level1-workstation
+        - manual
+        - patch
+        - journald
+        - rule_4.2.1.1.2
+
+    - name: "4.2.1.1.3 | PATCH | Ensure systemd-journal-remote is enabled"
+      ansible.builtin.systemd:
+        name: systemd-journal-upload
+        state: started
+        enabled: true
+      tags:
+        - level1-server
+        - level1-workstation
+        - manual
+        - patch
+        - journald
+        - rule_4.2.1.1.3
+
+    - name: "4.2.1.1.4 | PATCH | Ensure journald is not configured to receive logs from remote clients"
+      ansible.builtin.systemd:
+        name: systemd-journal-remote.socket
+        state: stopped
+        enabled: false
+        masked: true
+      tags:
+        - level1-server
+        - level1-workstation
+        - patch
+        - journald
+        - rule_4.2.1.1.4
+
+    - name: "4.2.2.1 | PATCH | Ensure rsyslog is installed"
+      ansible.builtin.package:
+        name: rsyslog
+        state: present
+
+    - name: "4.2.2.2 | PATCH | Ensure rsyslog Service is enabled"
+      ansible.builtin.systemd:
+        name: rsyslog
+        enabled: true
+        state: started
+
+    - name: "4.2.2.3 | PATCH | Ensure journald is configured to send logs to rsyslog"
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/journald.conf
+        regexp: '^ForwardToSyslog='
+        line: 'ForwardToSyslog=yes'
+        create: yes
+      notify: Restart syslog service
+
+    - name: "4.2.2.4 | PATCH | Ensure rsyslog default file permissions configured"
+      ansible.builtin.lineinfile:
+        path: /etc/rsyslog.conf
+        regexp: '^\$FileCreateMode|^#\$FileCreateMode'
+        line: '$FileCreateMode 0640'
+      notify: Restart syslog service
+
+    - name: "4.2.2.5 | PATCH | Ensure basic logging rules are present"
+      ansible.builtin.blockinfile:
+        path: /etc/rsyslog.conf
+        marker: "# {mark} CIS 4.2.2.5 Managed Block"
+        block: |
+          # Standard log configuration
+          *.emerg                         :omusrmsg:*
+          auth,authpriv.*                 /var/log/secure
+          mail.*                          -/var/log/mail
+          cron.*                          -/var/log/cron
+          mail.info                       -/var/log/mail.info
+          mail.warn                       -/var/log/mail.warn
+          mail.err                        /var/log/mail.err
+          *.=warning;*.=err               -/var/log/warn
+          *.crit                          /var/log/warn
+          *.*;mail.none;news.none         -/var/log/messages
+          local0,local1.*                 -/var/log/localmessages
+          local2,local3.*                 -/var/log/localmessages
+          local4,local5.*                 -/var/log/localmessages
+          local6,local7.*                 -/var/log/localmessages
+      notify: Restart syslog service
+
+    - name: "4.2.3 | Find all log files under /var/log"
+      ansible.builtin.find:
+        paths: "/var/log"
+        file_type: file
+        recurse: true
+        hidden: true
+      register: logfiles
+
+    - name: "4.2.3 | Set secure permissions on log files"
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        mode: '0600'
+      loop: "{{ logfiles.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+      when:
+        - item.path not in ["/var/log/btmp", "/var/log/utmp", "/var/log/wtmp"]
+
+    - name: "4.2.3 | Verify permissions after update"
+      ansible.builtin.shell: |
+        find /var/log -type f ! -perm 600 -ls || true
+      register: verify_permissions
+      changed_when: false
+
+    - name: "Show files with incorrect permissions (if any)"
+      ansible.builtin.debug:
+        msg: "{{ verify_permissions.stdout_lines | default(['All log files have secure permissions (0600).']) }}"
+
+
+

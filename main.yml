@@ -1,0 +1,39 @@
+---
+- name: "CIS Debian 11 Full Hardening"
+  hosts: localhost
+  become: true
+  connection: local
+
+  tasks:
+    - name: "Include 2.x | Services and Time Synchronization"
+      ansible.builtin.include_tasks: tasks/02_services_time_sync.yml
+
+    - name: "Include 3.x | Network and Firewall Hardening"
+      ansible.builtin.include_tasks: tasks/03_network_firewall.yml
+
+    - name: "Include 4.x | Audit and Logging Configuration"
+      ansible.builtin.include_tasks: tasks/04_audit_and_logs.yml
+
+    - name: "Include 5.x | Access, Authentication, SSH, and Sudo Configuration"
+      ansible.builtin.include_tasks: tasks/05_access_auth_ssh_sudo.yml
+
+  handlers:
+    - name: Restart timeservice
+      ansible.builtin.systemd:
+        name: systemd-timesyncd
+        state: restarted
+
+    - name: Restart journald
+      ansible.builtin.systemd:
+        name: systemd-journald
+        state: restarted
+
+    - name: Restart syslog service
+      ansible.builtin.systemd:
+        name: rsyslog
+        state: restarted
+
+    - name: restart sshd
+      ansible.builtin.service:
+        name: ssh
+        state: restarted

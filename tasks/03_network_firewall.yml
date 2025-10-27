@@ -1,0 +1,404 @@
+---
+    - name: "3.1.1 | Ensure IPv6 is disabled in GRUB"
+      block:
+        - name: "Check if ipv6.disable exists in GRUB"
+          ansible.builtin.shell: grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | cut -f2 -d'"'
+          register: grub_cmdline
+          changed_when: false
+          failed_when: false
+
+        - name: "Replace existing ipv6.disable parameter if found"
+          ansible.builtin.replace:
+            path: /etc/default/grub
+            regexp: '^(GRUB_CMDLINE_LINUX=.*)\bipv6\.disable=\d\b(.*$)'
+            replace: '\1ipv6.disable=1\2'
+          when: "'ipv6.disable' in grub_cmdline.stdout"
+
+        - name: "Insert ipv6.disable parameter if missing"
+          ansible.builtin.lineinfile:
+            path: /etc/default/grub
+            regexp: '^(GRUB_CMDLINE_LINUX=".*)"$'
+            line: '\1 ipv6.disable=1"'
+            backrefs: true
+          when: "'ipv6.disable' not in grub_cmdline.stdout"
+
+        - name: "Update GRUB configuration"
+          ansible.builtin.shell: update-grub
+          changed_when: true
+      tags:
+        - ipv6
+
+    - name: "3.1.2 | Disable wireless interfaces (if present)"
+      block:
+        - name: "Check WiFi status"
+          ansible.builtin.shell: nmcli radio wifi
+          register: wifi_status
+          changed_when: false
+          failed_when: false
+
+        - name: "Disable all wireless interfaces"
+          ansible.builtin.shell: nmcli radio all off
+          when: "'enabled' in wifi_status.stdout"
+
+        - name: "Warn if network-manager is not available"
+          ansible.builtin.debug:
+            msg: "Warning: NetworkManager not installed — disable WiFi manually if needed."
+          when: wifi_status.rc != 0
+      tags:
+        - wireless
+
+    - name: "3.1.3 | Disable DCCP kernel module"
+      ansible.builtin.lineinfile:
+        path: /etc/modprobe.d/dccp.conf
+        regexp: '^(#)?install dccp(\\s|$)'
+        line: "{{ item }}"
+        create: true
+      loop:
+        - install dccp /bin/true
+        - blacklist dccp
+      tags:
+        - dccp
+
+    - name: "3.1.4 | Disable SCTP kernel module"
+      ansible.builtin.lineinfile:
+        path: /etc/modprobe.d/sctp.conf
+        regexp: '^(#)?install sctp(\\s|$)'
+        line: "{{ item }}"
+        create: true
+      loop:
+        - install sctp /bin/true
+        - blacklist sctp
+      tags:
+        - sctp
+
+    - name: "3.1.5 | Disable RDS kernel module"
+      ansible.builtin.lineinfile:
+        path: /etc/modprobe.d/rds.conf
+        regexp: '^(#)?install rds(\\s|$)'
+        line: "{{ item }}"
+        create: true
+      loop:
+        - install rds /bin/true
+        - blacklist rds
+      tags:
+        - rds
+
+    - name: "3.1.6 | Disable TIPC kernel module"
+      ansible.builtin.lineinfile:
+        path: /etc/modprobe.d/tipc.conf
+        regexp: '^(#)?install tipc(\\s|$)'
+        line: "{{ item }}"
+        create: true
+      loop:
+        - install tipc /bin/true
+        - blacklist tipc
+      tags:
+        - tipc
+
+    - name: "3.2.1 | Ensure packet redirect sending is disabled"
+      ansible.posix.sysctl:
+        name: "{{ item }}"
+        value: '0'
+        sysctl_set: true
+        sysctl_file: /etc/sysctl.d/99-cis-network.conf
+        state: present
+        reload: true
+        ignoreerrors: true
+      loop:
+        - net.ipv4.conf.all.send_redirects
+        - net.ipv4.conf.default.send_redirects
+      tags:
+        - packet_redirect
+        - sysctl
+
+    - name: "3.2.2 | Ensure IP forwarding is disabled"
+      block:
+
+        - name: "Disable IPv4 forwarding"
+          ansible.posix.sysctl:
+            name: net.ipv4.ip_forward
+            value: '0'
+            sysctl_set: true
+            sysctl_file: /etc/sysctl.d/99-cis-network.conf
+            state: present
+            reload: true
+            ignoreerrors: true
+
+        - name: "Disable IPv6 forwarding"
+          ansible.posix.sysctl:
+            name: net.ipv6.conf.all.forwarding
+            value: '0'
+            sysctl_set: true
+            sysctl_file: /etc/sysctl.d/99-cis-network.conf
+            state: present
+            reload: true
+            ignoreerrors: true
+          when: ansible_facts.get('proc_cmdline', '') is not search('ipv6.disable=1')
+
+      tags:
+        - ip_forwarding
+        - sysctl
+
+    - name: "3.3.1 | Ensure source routed packets are not accepted"
+      block:
+        - name: "IPv4 settings"
+          ansible.posix.sysctl:
+            name: "{{ item }}"
+            value: '0'
+            sysctl_set: true
+            sysctl_file: /etc/sysctl.d/99-cis-network.conf
+            state: present
+            reload: true
+            ignoreerrors: true
+          loop:
+            - net.ipv4.conf.all.accept_source_route
+            - net.ipv4.conf.default.accept_source_route
+
+        - name: "IPv6 settings"
+          ansible.posix.sysctl:
+            name: "{{ item }}"
+            value: '0'
+            sysctl_set: true
+            sysctl_file: /etc/sysctl.d/99-cis-network.conf
+            state: present
+            reload: true
+            ignoreerrors: true
+          loop:
+            - net.ipv6.conf.all.accept_source_route
+            - net.ipv6.conf.default.accept_source_route
+          when: ansible_facts.get('proc_cmdline', '') is not search('ipv6.disable=1')
+      tags:
+        - routed_packets
+
+    - name: "3.3.2 | Ensure ICMP redirects are not accepted"
+      block:
+        - name: "IPv4 settings"
+          ansible.posix.sysctl:
+            name: "{{ item }}"
+            value: '0'
+            sysctl_set: true
+            sysctl_file: /etc/sysctl.d/99-cis-network.conf
+            state: present
+            reload: true
+            ignoreerrors: true
+          loop:
+            - net.ipv4.conf.all.accept_redirects
+            - net.ipv4.conf.default.accept_redirects
+
+        - name: "IPv6 settings"
+          ansible.posix.sysctl:
+            name: "{{ item }}"
+            value: '0'
+            sysctl_set: true
+            sysctl_file: /etc/sysctl.d/99-cis-network.conf
+            state: present
+            reload: true
+            ignoreerrors: true
+          loop:
+            - net.ipv6.conf.all.accept_redirects
+            - net.ipv6.conf.default.accept_redirects
+          when: ansible_facts.get('proc_cmdline', '') is not search('ipv6.disable=1')
+      tags:
+        - icmp
+
+    - name: "3.3.3 | Ensure secure ICMP redirects are not accepted"
+      ansible.posix.sysctl:
+        name: "{{ item }}"
+        value: '0'
+        sysctl_set: true
+        sysctl_file: /etc/sysctl.d/99-cis-network.conf
+        state: present
+        reload: true
+        ignoreerrors: true
+      loop:
+        - net.ipv4.conf.all.secure_redirects
+        - net.ipv4.conf.default.secure_redirects
+      tags:
+        - icmp
+
+    - name: "3.3.4 | Ensure suspicious packets are logged"
+      ansible.posix.sysctl:
+        name: "{{ item }}"
+        value: '1'
+        sysctl_set: true
+        sysctl_file: /etc/sysctl.d/99-cis-network.conf
+        state: present
+        reload: true
+        ignoreerrors: true
+      loop:
+        - net.ipv4.conf.all.log_martians
+        - net.ipv4.conf.default.log_martians
+      tags:
+        - suspicious_packets
+
+    - name: "3.3.5 | Ensure broadcast ICMP requests are ignored"
+      ansible.posix.sysctl:
+        name: net.ipv4.icmp_echo_ignore_broadcasts
+        value: '1'
+        sysctl_set: true
+        sysctl_file: /etc/sysctl.d/99-cis-network.conf
+        state: present
+        reload: true
+        ignoreerrors: true
+      tags:
+        - icmp
+
+    - name: "3.3.6 | Ensure bogus ICMP responses are ignored"
+      ansible.posix.sysctl:
+        name: net.ipv4.icmp_ignore_bogus_error_responses
+        value: '1'
+        sysctl_set: true
+        sysctl_file: /etc/sysctl.d/99-cis-network.conf
+        state: present
+        reload: true
+        ignoreerrors: true
+      tags:
+        - icmp
+
+    - name: "3.3.7 | Ensure Reverse Path Filtering is enabled"
+      ansible.posix.sysctl:
+        name: "{{ item }}"
+        value: '1'
+        sysctl_set: true
+        sysctl_file: /etc/sysctl.d/99-cis-network.conf
+        state: present
+        reload: true
+        ignoreerrors: true
+      loop:
+        - net.ipv4.conf.all.rp_filter
+        - net.ipv4.conf.default.rp_filter
+      tags:
+        - reverse_path_filtering
+
+    - name: "3.3.8 | Ensure TCP SYN Cookies is enabled"
+      ansible.posix.sysctl:
+        name: net.ipv4.tcp_syncookies
+        value: '1'
+        sysctl_set: true
+        sysctl_file: /etc/sysctl.d/99-cis-network.conf
+        state: present
+        reload: true
+        ignoreerrors: true
+      tags:
+        - tcp_syn_cookies
+
+    - name: "3.3.9 | Ensure IPv6 router advertisements are not accepted"
+      ansible.posix.sysctl:
+        name: "{{ item }}"
+        value: '0'
+        sysctl_set: true
+        sysctl_file: /etc/sysctl.d/99-cis-network.conf
+        state: present
+        reload: true
+        ignoreerrors: true
+      loop:
+        - net.ipv6.conf.all.accept_ra
+        - net.ipv6.conf.default.accept_ra
+      when: ansible_facts.get('proc_cmdline', '') is not search('ipv6.disable=1')
+      tags:
+        - ipv6
+        - router_advertisements
+
+
+    - name: "3.5.1.1 | Ensure ufw is installed"
+      ansible.builtin.package:
+        name: ufw
+        state: present
+      tags: [ufw]
+
+    - name: "3.5.1.2 | Ensure iptables-persistent is not installed with ufw"
+      ansible.builtin.package:
+        name: iptables-persistent
+        state: absent
+      tags: [ufw]
+
+    - name: "3.5.1.3 | Ensure ufw service is enabled and SSH allowed"
+      block:
+        - name: "Allow SSH through ufw"
+          community.general.ufw:
+            rule: allow
+            name: OpenSSH
+
+        - name: "Enable and start ufw service"
+          ansible.builtin.systemd:
+            name: ufw
+            enabled: true
+            state: started
+            masked: false
+      tags: [ufw]
+
+    - name: "3.5.1.4 | Ensure loopback traffic is configured"
+      block:
+        - name: "Allow incoming loopback traffic"
+          community.general.ufw:
+            rule: allow
+            direction: in
+            interface: lo
+
+        - name: "Allow outgoing loopback traffic"
+          community.general.ufw:
+            rule: allow
+            direction: out
+            interface: lo
+
+        - name: "Deny incoming IPv4 traffic from 127.0.0.0/8"
+          community.general.ufw:
+            rule: deny
+            direction: in
+            from_ip: 127.0.0.0/8
+
+        - name: "Deny incoming IPv6 traffic from ::1"
+          community.general.ufw:
+            rule: deny
+            direction: in
+            from_ip: '::1'
+          when: ansible_facts.get('proc_cmdline', '') is not search('ipv6.disable=1')
+      tags: [ufw]
+
+    - name: "3.5.1.5 | Ensure ufw outbound connections are configured"
+      block:
+        - name: "Allow all outbound connections"
+          community.general.ufw:
+            rule: allow
+            direction: out
+      tags: [ufw]
+
+    - name: "3.5.1.6 | Audit | Show open ports and current ufw rules"
+      block:
+        - name: "Get list of open ports"
+          ansible.builtin.shell: ss -4tuln
+          register: open_ports
+          changed_when: false
+          failed_when: false
+
+        - name: "Get list of current ufw rules"
+          ansible.builtin.shell: ufw status
+          register: ufw_rules
+          changed_when: false
+          failed_when: false
+
+        - name: "Display open ports and ufw rules"
+          ansible.builtin.debug:
+            msg:
+              - "***** Open Listening Ports *****"
+              - "{{ open_ports.stdout_lines }}"
+              - "***** Active UFW Rules *****"
+              - "{{ ufw_rules.stdout_lines }}"
+      tags: [ufw, audit]
+
+    - name: "3.5.1.7 | Ensure ufw default deny firewall policy"
+      community.general.ufw:
+        default: deny
+        direction: "{{ item }}"
+      loop:
+        - incoming
+        - outgoing
+        - routed
+      tags: [ufw]
+
+    - name: "3.5.1.8 | Ensure ufw is enabled (firewall active)"
+      ansible.builtin.command: ufw --force enable
+      register: ufw_enable
+      changed_when: "'already enabled' not in ufw_enable.stdout"
+      failed_when: false
+      tags: [ufw]
