@@ -1,0 +1,1773 @@
+
+- name: "1.1.1.1 | PATCH | Ensure mounting of cramfs filesystems is disabled"
+  block:
+      - name: "1.1.1.1 | PATCH | Ensure mounting of cramfs filesystems is disabled | Edit modprobe config"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/cramfs.conf
+            regexp: '^(#)?install cramfs(\\s|$)'
+            line: install cramfs /bin/true
+            create: true
+
+      - name: "1.1.1.1 | PATCH | Ensure mounting of cramfs filesystems is disabled | Disable cramfs"
+        community.general.modprobe:
+            name: cramfs
+            state: absent
+        when: ansible_connection != 'docker'
+
+      - name: "1.1.1.1 | PATCH | Ensure mounting of cramfs filesystems is disabled | blacklist cramfs"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/blacklist.conf
+            regexp: '^blacklist cramfs'
+            line: blacklist cramfs
+            create: true
+  notify: Update_Initramfs
+  when: debian11cis_rule_1_1_1_1
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.1.1
+      - cramfs
+
+- name: "1.1.1.2 | PATCH | Ensure mounting of squashfs filesystems is disabled"
+  block:
+      - name: "1.1.1.2 | PATCH | Ensure mounting of squashfs filesystems is disabled | Edit modprobe config"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/squashfs.conf
+            regexp: '^(#)?install squashfs(\\s|$)'
+            line: install squashfs /bin/true
+            create: true
+
+      - name: "1.1.1.2 | PATCH | Ensure mounting of squashfs filesystems is disabled | Disable squashfs"
+        community.general.modprobe:
+            name: squashfs
+            state: absent
+        when: ansible_connection != 'docker'
+
+      - name: "1.1.1.2 | PATCH | Ensure mounting of squashfs filesystems is disabled | blacklist squashfs"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/blacklist.conf
+            regexp: '^blacklist squashfs'
+            line: blacklist squashfs
+            create: true
+  notify: Update_Initramfs
+  when:
+      - debian11cis_rule_1_1_1_2
+      - snap_pkg_mgr.stdout == '0'
+      - squashfs_builtin.stdout == '0'
+  tags:
+      - level2-server
+      - level2-workstation
+      - automated
+      - patch
+      - rule_1.1.1.2
+      - squashfs
+
+- name: "1.1.1.3 | PATCH | Ensure mounting of udf filesystems is disabled"
+  block:
+      - name: "1.1.1.3 | PATCH | Ensure mounting of udf filesystems is disabled | Edit modprobe config"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/udf.conf
+            regexp: '^(#)?install udf(\\s|$)'
+            line: install udf /bin/true
+            create: true
+
+      - name: "1.1.1.3 | PATCH | Ensure mounting of udf filesystems is disabled | Disable udf"
+        community.general.modprobe:
+            name: udf
+            state: absent
+        when: ansible_connection != 'docker'
+
+      - name: "1.1.1.3 | PATCH | Ensure mounting of udf filesystems is disabled | blacklist udf"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/blacklist.conf
+            regexp: '^blacklist udf'
+            line: blacklist udf
+            create: true
+  notify: Update_Initramfs
+  when: debian11cis_rule_1_1_1_3
+  tags:
+      - level2-server
+      - level2-workstation
+      - automated
+      - patch
+      - rule_1.1.1.3
+      - udf
+
+- name: "1.1.1.4 | PATCH | Ensure hfsplus kernel module is not available"
+  block:
+      - name: "1.1.1.4 | PATCH | Ensure hfsplus kernel module is not available | Edit modprobe config"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/hfsplus.conf
+            regexp: '^(#)?install hfsplus(\\s|$)'
+            line: install hfsplus /bin/true
+            create: true
+
+      - name: "1.1.1.4 | PATCH | Ensure hfsplus kernel module is not available | Disable hfsplus"
+        community.general.modprobe:
+            name: hfsplus
+            state: absent
+        when: ansible_connection != 'docker'
+
+      - name: "1.1.1.4 | PATCH | Ensure hfsplus kernel module is not available | blacklist hfsplus"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/blacklist.conf
+            regexp: '^blacklist hfsplus'
+            line: blacklist hfsplus
+            create: true
+  notify: Update_Initramfs
+  when: debian11cis_rule_1_1_1_4
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.1.4
+      - hfsplus
+
+- name: "1.1.1.5 | PATCH | Ensure jffs2 kernel module is not available"
+  block:
+      - name: "1.1.1.5 | PATCH | Ensure jffs2 kernel module is not available | Edit modprobe config"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/jffs2.conf
+            regexp: '^(#)?install jffs2(\\s|$)'
+            line: install jffs2 /bin/true
+            create: true
+
+      - name: "1.1.1.5 | PATCH | Ensure jffs2 kernel module is not available | Disable jffs2"
+        community.general.modprobe:
+            name: jffs2
+            state: absent
+        when: ansible_connection != 'docker'
+
+      - name: "1.1.1.5 | PATCH | Ensure jffs2 kernel module is not available | blacklist jffs2"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/blacklist.conf
+            regexp: '^blacklist jffs2'
+            line: blacklist jffs2
+            create: true
+  notify: Update_Initramfs
+  when: debian11cis_rule_1_1_1_5
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.1.5
+      - jffs2
+
+- name: "1.1.1.7 | PATCH | Ensure squashfs kernel module is not available"
+  block:
+      - name: "1.1.1.7 | PATCH | Ensure squashfs kernel module is not available | Edit modprobe config"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/squashfs.conf
+            regexp: '^(#)?install squashfs(\\s|$)'
+            line: install squashfs /bin/true
+            create: true
+
+      - name: "1.1.1.7 | PATCH | Ensure squashfs kernel module is not available | Disable squashfs"
+        community.general.modprobe:
+            name: squashfs
+            state: absent
+        when: ansible_connection != 'docker'
+
+      - name: "1.1.1.7 | PATCH | Ensure squashfs kernel module is not available | blacklist squashfs"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/blacklist.conf
+            regexp: '^blacklist squashfs'
+            line: blacklist squashfs
+            create: true
+  notify: Update_Initramfs
+  when:
+      - debian11cis_rule_1_1_1_7
+      - snap_pkg_mgr.stdout == '0'
+      - squashfs_builtin.stdout == '0'
+  tags:
+      - level2-server
+      - level2-workstation
+      - automated
+      - patch
+      - rule_1.1.1.7
+      - squashfs
+
+- name: "1.1.1.8 | PATCH | Ensure udf kernel module is not available"
+  block:
+      - name: "1.1.1.8 | PATCH | Ensure udf kernel module is not available | Edit modprobe config"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/udf.conf
+            regexp: '^(#)?install udf(\\s|$)'
+            line: install udf /bin/true
+            create: true
+
+      - name: "1.1.1.8 | PATCH | Ensure udf kernel module is not available | Disable udf"
+        community.general.modprobe:
+            name: udf
+            state: absent
+        when: ansible_connection != 'docker'
+
+      - name: "1.1.1.8 | PATCH | Ensure udf kernel module is not available | blacklist udf"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/blacklist.conf
+            regexp: '^blacklist udf'
+            line: blacklist udf
+            create: true
+  notify: Update_Initramfs
+  when:
+      - debian11cis_rule_1_1_1_8
+      - not azure_vm_detected | default(false)
+  tags:
+      - level2-server
+      - level2-workstation
+      - automated
+      - patch
+      - rule_1.1.1.8
+      - udf
+
+- name: "1.1.1.9 | PATCH | Ensure usb-storage kernel module is not available"
+  block:
+      - name: "1.1.1.9 | PATCH | Ensure usb-storage kernel module is not available | Edit modprobe config"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/usb-storage.conf
+            regexp: '^(#)?install usb-storage(\\s|$)'
+            line: install usb-storage /bin/true
+            create: true
+
+      - name: "1.1.1.9 | PATCH | Ensure usb-storage kernel module is not available | Disable usb-storage"
+        community.general.modprobe:
+            name: usb-storage
+            state: absent
+        when: ansible_connection != 'docker'
+
+      - name: "1.1.1.9 | PATCH | Ensure usb-storage kernel module is not available | blacklist usb-storage"
+        ansible.builtin.lineinfile:
+            dest: /etc/modprobe.d/blacklist.conf
+            regexp: '^blacklist usb-storage'
+            line: blacklist usb-storage
+            create: true
+  notify: Update_Initramfs
+  when: debian11cis_rule_1_1_1_9
+  tags:
+      - level1-server
+      - level2-workstation
+      - stig
+      - automated
+      - patch
+      - rule_1.1.1.9
+      - usb-storage
+
+- name: "1.1.1.12 | PATCH | Ensure sticky bit is set on all world-writable directories"
+  block:
+      - name: "1.1.1.12 | PATCH | Find world-writable directories without sticky bit"
+        ansible.builtin.shell: |
+          df --local -P | awk '{if (NR!=1) print $6}' | \
+          xargs -I '{}' find '{}' -xdev -type d \( -perm -0002 -a ! -perm -1000 \) 2>/dev/null
+        register: world_writable_dirs
+        changed_when: false
+
+      - name: "1.1.1.12 | PATCH | Set sticky bit on all world-writable directories"
+        ansible.builtin.command: chmod a+t "{{ item }}"
+        loop: "{{ world_writable_dirs.stdout_lines }}"
+        when: world_writable_dirs.stdout != ""
+        loop_control:
+            label: "{{ item }}"
+  when: debian11cis_rule_1_1_1_12
+  tags:
+      - level1-server
+      - level1-workstation
+      - stig
+      - automated
+      - patch
+      - rule_1.1.1.12
+      - stickybit
+
+- name: "1.1.2.1.2 | PATCH | Ensure nodev option set on /tmp partition"
+  block:
+      - name: "1.1.2.1.2 | PATCH | Check if /tmp is a separate partition"
+        ansible.builtin.command: findmnt -kn /tmp
+        register: tmp_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.1.2 | PATCH | Ensure nodev option is set on /tmp partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/tmp\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nodev'
+        when: tmp_mount.rc == 0
+        notify: Remount_tmp
+
+      - name: "1.1.2.1.2 | PATCH | Ensure /tmp is mounted with nodev option"
+        ansible.posix.mount:
+            path: /tmp
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/tmp') | map(attribute='device') | list | first) | default('tmpfs') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/tmp') | map(attribute='fstype') | list | first) | default('tmpfs') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: tmp_mount.rc == 0
+  when: debian11cis_rule_1_1_2_1_2
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.1.2
+      - tmp
+      - nodev
+
+- name: "1.1.2.1.3 | PATCH | Ensure nosuid option set on /tmp partition"
+  block:
+      - name: "1.1.2.1.3 | PATCH | Check if /tmp is a separate partition"
+        ansible.builtin.command: findmnt -kn /tmp
+        register: tmp_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.1.3 | PATCH | Ensure nosuid option is set on /tmp partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/tmp\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nosuid'
+        when: tmp_mount.rc == 0
+        notify: Remount_tmp
+
+      - name: "1.1.2.1.3 | PATCH | Ensure /tmp is mounted with nosuid option"
+        ansible.posix.mount:
+            path: /tmp
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/tmp') | map(attribute='device') | list | first) | default('tmpfs') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/tmp') | map(attribute='fstype') | list | first) | default('tmpfs') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: tmp_mount.rc == 0
+  when: debian11cis_rule_1_1_2_1_3
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.1.3
+      - tmp
+      - nosuid
+
+- name: "1.1.2.1.4 | PATCH | Ensure noexec option set on /tmp partition"
+  block:
+      - name: "1.1.2.1.4 | PATCH | Check if /tmp is a separate partition"
+        ansible.builtin.command: findmnt -kn /tmp
+        register: tmp_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.1.4 | PATCH | Ensure noexec option is set on /tmp partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/tmp\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,noexec'
+        when: tmp_mount.rc == 0
+        notify: Remount_tmp
+
+      - name: "1.1.2.1.4 | PATCH | Ensure /tmp is mounted with noexec option"
+        ansible.posix.mount:
+            path: /tmp
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/tmp') | map(attribute='device') | list | first) | default('tmpfs') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/tmp') | map(attribute='fstype') | list | first) | default('tmpfs') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: tmp_mount.rc == 0
+  when: debian11cis_rule_1_1_2_1_4
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.1.4
+      - tmp
+      - noexec
+
+- name: "1.1.2.2.1 | PATCH | Ensure /dev/shm is a separate partition"
+  block:
+      - name: "1.1.2.2.1 | PATCH | Check if /dev/shm is mounted as a separate partition"
+        ansible.builtin.command: findmnt -kn /dev/shm
+        register: dev_shm_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.2.1 | PATCH | Configure /dev/shm as a separate tmpfs partition in /etc/fstab"
+        ansible.builtin.lineinfile:
+            path: /etc/fstab
+            regexp: '^tmpfs\s+/dev/shm'
+            line: 'tmpfs /dev/shm tmpfs defaults,rw,nosuid,nodev,noexec,relatime,size=2G 0 0'
+            create: true
+        when: dev_shm_mount.rc != 0
+        notify: Mount_dev_shm
+
+      - name: "1.1.2.2.1 | PATCH | Mount /dev/shm if not already mounted"
+        ansible.posix.mount:
+            path: /dev/shm
+            src: tmpfs
+            fstype: tmpfs
+            opts: defaults,rw,nosuid,nodev,noexec,relatime,size=2G
+            state: mounted
+        when: dev_shm_mount.rc != 0
+  when: debian11cis_rule_1_1_2_2_1
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.2.1
+      - devshm
+
+- name: "1.1.2.2.2 | PATCH | Ensure nodev option set on /dev/shm partition"
+  block:
+      - name: "1.1.2.2.2 | PATCH | Check if /dev/shm is a separate partition"
+        ansible.builtin.command: findmnt -kn /dev/shm
+        register: dev_shm_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.2.2 | PATCH | Ensure nodev option is set on /dev/shm partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/dev/shm\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nodev'
+        when: dev_shm_mount.rc == 0
+        notify: Remount_dev_shm
+
+      - name: "1.1.2.2.2 | PATCH | Ensure /dev/shm is mounted with nodev option"
+        ansible.posix.mount:
+            path: /dev/shm
+            src: tmpfs
+            fstype: tmpfs
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: dev_shm_mount.rc == 0
+  when: debian11cis_rule_1_1_2_2_2
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.2.2
+      - devshm
+      - nodev
+
+- name: "1.1.2.2.3 | PATCH | Ensure nosuid option set on /dev/shm partition"
+  block:
+      - name: "1.1.2.2.3 | PATCH | Check if /dev/shm is a separate partition"
+        ansible.builtin.command: findmnt -kn /dev/shm
+        register: dev_shm_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.2.3 | PATCH | Ensure nosuid option is set on /dev/shm partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/dev/shm\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nosuid'
+        when: dev_shm_mount.rc == 0
+        notify: Remount_dev_shm
+
+      - name: "1.1.2.2.3 | PATCH | Ensure /dev/shm is mounted with nosuid option"
+        ansible.posix.mount:
+            path: /dev/shm
+            src: tmpfs
+            fstype: tmpfs
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: dev_shm_mount.rc == 0
+  when: debian11cis_rule_1_1_2_2_3
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.2.3
+      - devshm
+      - nosuid
+
+- name: "1.1.2.2.4 | PATCH | Ensure noexec option set on /dev/shm partition"
+  block:
+      - name: "1.1.2.2.4 | PATCH | Check if /dev/shm is a separate partition"
+        ansible.builtin.command: findmnt -kn /dev/shm
+        register: dev_shm_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.2.4 | PATCH | Ensure noexec option is set on /dev/shm partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/dev/shm\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,noexec'
+        when: dev_shm_mount.rc == 0
+        notify: Remount_dev_shm
+
+      - name: "1.1.2.2.4 | PATCH | Ensure /dev/shm is mounted with noexec option"
+        ansible.posix.mount:
+            path: /dev/shm
+            src: tmpfs
+            fstype: tmpfs
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: dev_shm_mount.rc == 0
+  when: debian11cis_rule_1_1_2_2_4
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.2.4
+      - devshm
+      - noexec
+
+- name: "1.1.2.3.2 | PATCH | Ensure nodev option set on /home partition"
+  block:
+      - name: "1.1.2.3.2 | PATCH | Check if /home is a separate partition"
+        ansible.builtin.command: findmnt -kn /home
+        register: home_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.3.2 | PATCH | Ensure nodev option is set on /home partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/home\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nodev'
+        when: home_mount.rc == 0
+        notify: Remount_home
+
+      - name: "1.1.2.3.2 | PATCH | Ensure /home is mounted with nodev option"
+        ansible.posix.mount:
+            path: /home
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='device') | list | first) | default('none') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='fstype') | list | first) | default('ext4') }}"
+            opts: defaults,rw,nodev,relatime
+            state: mounted
+        when: home_mount.rc == 0
+  when: debian11cis_rule_1_1_2_3_2
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.3.2
+      - home
+      - nodev
+
+- name: "1.1.2.1.3 | PATCH | Ensure nosuid option set on /tmp partition"
+  block:
+      - name: "1.1.2.1.3 | PATCH | Check if /tmp is a separate partition"
+        ansible.builtin.command: findmnt -kn /tmp
+        register: tmp_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.1.3 | PATCH | Ensure nosuid option is set on /tmp partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/tmp\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nosuid'
+        when: tmp_mount.rc == 0
+        notify: Remount_tmp
+
+      - name: "1.1.2.1.3 | PATCH | Ensure /tmp is mounted with nosuid option"
+        ansible.posix.mount:
+            path: /tmp
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/tmp') | map(attribute='device') | list | first) | default('tmpfs') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/tmp') | map(attribute='fstype') | list | first) | default('tmpfs') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: tmp_mount.rc == 0
+  when: debian11cis_rule_1_1_2_1_3
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.1.3
+      - tmp
+      - nosuid
+
+- name: "1.1.2.3.3 | PATCH | Ensure nosuid option set on /home partition"
+  block:
+      - name: "1.1.2.3.3 | PATCH | Check if /home is a separate partition"
+        ansible.builtin.command: findmnt -kn /home
+        register: home_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.3.3 | PATCH | Ensure nosuid option is set on /home partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/home\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nosuid'
+        when: home_mount.rc == 0
+        notify: Remount_home
+
+      - name: "1.1.2.3.3 | PATCH | Ensure /home is mounted with nosuid option"
+        ansible.posix.mount:
+            path: /home
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='device') | list | first) | default('none') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='fstype') | list | first) | default('ext4') }}"
+            opts: defaults,rw,nosuid,nodev,relatime
+            state: mounted
+        when: home_mount.rc == 0
+  when: debian11cis_rule_1_1_2_3_3
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.3.3
+      - home
+      - nosuid
+
+- name: "1.1.2.5.1 | PATCH | Ensure separate partition exists for /var/tmp"
+  block:
+      - name: "1.1.2.5.1 | PATCH | Check if /var/tmp is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/tmp
+        register: var_tmp_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.5.1 | PATCH | Alert if /var/tmp is not a separate partition"
+        ansible.builtin.debug:
+            msg: >
+                [CIS WARNING] /var/tmp is not configured as a separate partition.
+                It is recommended to create a dedicated partition and configure it
+                in /etc/fstab as follows:
+                <device> /var/tmp <fstype> defaults,rw,nosuid,nodev,noexec,relatime 0 0
+        when: var_tmp_mount.rc != 0
+
+      - name: "1.1.2.5.1 | PATCH | Ensure /var/tmp is configured in /etc/fstab (informational)"
+        ansible.builtin.lineinfile:
+            path: /etc/fstab
+            regexp: '^\S+\s+/var/tmp\s+'
+            line: '<device> /var/tmp <fstype> defaults,rw,nosuid,nodev,noexec,relatime 0 0'
+            create: no
+        when: var_tmp_mount.rc != 0
+        check_mode: true
+  when: debian11cis_rule_1_1_2_5_1
+  tags:
+      - level2-server
+      - level2-workstation
+      - manual
+      - patch
+      - rule_1.1.2.5.1
+      - vartmp
+      - partition
+
+- name: "1.1.2.5.2 | PATCH | Ensure nodev option set on /var/tmp partition"
+  block:
+      - name: "1.1.2.5.2 | PATCH | Check if /var/tmp is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/tmp
+        register: var_tmp_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.5.2 | PATCH | Ensure nodev option is set on /var/tmp partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/var/tmp\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nodev'
+        when: var_tmp_mount.rc == 0
+        notify: Remount_var_tmp
+
+      - name: "1.1.2.5.2 | PATCH | Ensure /var/tmp is mounted with nodev option"
+        ansible.posix.mount:
+            path: /var/tmp
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='device') | list | first) | default('none') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='fstype') | list | first) | default('ext4') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: var_tmp_mount.rc == 0
+  when: debian11cis_rule_1_1_2_5_2
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.5.2
+      - vartmp
+      - nodev
+
+- name: "1.1.2.5.3 | PATCH | Ensure nosuid option set on /var/tmp partition"
+  block:
+      - name: "1.1.2.5.3 | PATCH | Check if /var/tmp is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/tmp
+        register: var_tmp_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.5.3 | PATCH | Ensure nosuid option is set on /var/tmp partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/var/tmp\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nosuid'
+        when: var_tmp_mount.rc == 0
+        notify: Remount_var_tmp
+
+      - name: "1.1.2.5.3 | PATCH | Ensure /var/tmp is mounted with nosuid option"
+        ansible.posix.mount:
+            path: /var/tmp
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='device') | list | first) | default('none') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='fstype') | list | first) | default('ext4') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: var_tmp_mount.rc == 0
+  when: debian11cis_rule_1_1_2_5_3
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.5.3
+      - vartmp
+      - nosuid
+
+- name: "1.1.2.5.4 | PATCH | Ensure noexec option set on /var/tmp partition"
+  block:
+      - name: "1.1.2.5.4 | PATCH | Check if /var/tmp is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/tmp
+        register: var_tmp_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.5.4 | PATCH | Ensure noexec option is set on /var/tmp partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/var/tmp\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,noexec'
+        when: var_tmp_mount.rc == 0
+        notify: Remount_var_tmp
+
+      - name: "1.1.2.5.4 | PATCH | Ensure /var/tmp is mounted with noexec option"
+        ansible.posix.mount:
+            path: /var/tmp
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='device') | list | first) | default('none') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='fstype') | list | first) | default('ext4') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: var_tmp_mount.rc == 0
+  when: debian11cis_rule_1_1_2_5_4
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.5.4
+      - vartmp
+      - noexec
+
+- name: "1.1.2.6.1 | PATCH | Ensure separate partition exists for /var/log"
+  block:
+      - name: "1.1.2.6.1 | PATCH | Check if /var/log is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/log
+        register: var_log_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.6.1 | PATCH | Alert if /var/log is not a separate partition"
+        ansible.builtin.debug:
+            msg: >
+                [CIS WARNING] /var/log is not configured as a separate partition.
+                It is recommended to create a dedicated partition and configure it
+                in /etc/fstab as follows:
+                <device> /var/log <fstype> defaults,rw,nosuid,nodev,noexec,relatime 0 0
+        when: var_log_mount.rc != 0
+
+      - name: "1.1.2.6.1 | PATCH | Ensure /var/log entry exists in /etc/fstab (informational)"
+        ansible.builtin.lineinfile:
+            path: /etc/fstab
+            regexp: '^\S+\s+/var/log\s+'
+            line: '<device> /var/log <fstype> defaults,rw,nosuid,nodev,noexec,relatime 0 0'
+            create: no
+        when: var_log_mount.rc != 0
+        check_mode: true
+  when: debian11cis_rule_1_1_2_6_1
+  tags:
+      - level2-server
+      - level2-workstation
+      - manual
+      - patch
+      - rule_1.1.2.6.1
+      - varlog
+      - partition
+
+- name: "1.1.2.6.2 | PATCH | Ensure nodev option set on /var/log partition"
+  block:
+      - name: "1.1.2.6.2 | PATCH | Check if /var/log is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/log
+        register: var_log_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.6.2 | PATCH | Ensure nodev option is set on /var/log partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/var/log\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nodev'
+        when: var_log_mount.rc == 0
+        notify: Remount_var_log
+
+      - name: "1.1.2.6.2 | PATCH | Ensure /var/log is mounted with nodev option"
+        ansible.posix.mount:
+            path: /var/log
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='device') | list | first) | default('none') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | list | first) | default('ext4') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: var_log_mount.rc == 0
+  when: debian11cis_rule_1_1_2_6_2
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.6.2
+      - varlog
+      - nodev
+
+- name: "1.1.2.6.3 | PATCH | Ensure nosuid option set on /var/log partition"
+  block:
+      - name: "1.1.2.6.3 | PATCH | Check if /var/log is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/log
+        register: var_log_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.6.3 | PATCH | Ensure nosuid option is set on /var/log partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/var/log\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nosuid'
+        when: var_log_mount.rc == 0
+        notify: Remount_var_log
+
+      - name: "1.1.2.6.3 | PATCH | Ensure /var/log is mounted with nosuid option"
+        ansible.posix.mount:
+            path: /var/log
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='device') | list | first) | default('none') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | list | first) | default('ext4') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: var_log_mount.rc == 0
+  when: debian11cis_rule_1_1_2_6_3
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.6.3
+      - varlog
+      - nosuid
+
+- name: "1.1.2.6.4 | PATCH | Ensure noexec option set on /var/log partition"
+  block:
+      - name: "1.1.2.6.4 | PATCH | Check if /var/log is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/log
+        register: var_log_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.6.4 | PATCH | Ensure noexec option is set on /var/log partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/var/log\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,noexec'
+        when: var_log_mount.rc == 0
+        notify: Remount_var_log
+
+      - name: "1.1.2.6.4 | PATCH | Ensure /var/log is mounted with noexec option"
+        ansible.posix.mount:
+            path: /var/log
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='device') | list | first) | default('none') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | list | first) | default('ext4') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: var_log_mount.rc == 0
+  when: debian11cis_rule_1_1_2_6_4
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.6.4
+      - varlog
+      - noexec
+
+- name: "1.1.2.7.1 | PATCH | Ensure separate partition exists for /var/log/audit"
+  block:
+      - name: "1.1.2.7.1 | PATCH | Check if /var/log/audit is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/log/audit
+        register: var_log_audit_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.7.1 | PATCH | Alert if /var/log/audit is not a separate partition"
+        ansible.builtin.debug:
+            msg: >
+                [CIS WARNING] /var/log/audit is not configured as a separate partition.
+                It is recommended to create a dedicated partition and configure it
+                in /etc/fstab as follows:
+                <device> /var/log/audit <fstype> defaults,rw,nosuid,nodev,noexec,relatime 0 0
+        when: var_log_audit_mount.rc != 0
+
+      - name: "1.1.2.7.1 | PATCH | Ensure /var/log/audit entry exists in /etc/fstab (informational)"
+        ansible.builtin.lineinfile:
+            path: /etc/fstab
+            regexp: '^\S+\s+/var/log/audit\s+'
+            line: '<device> /var/log/audit <fstype> defaults,rw,nosuid,nodev,noexec,relatime 0 0'
+            create: no
+        when: var_log_audit_mount.rc != 0
+        check_mode: true
+  when: debian11cis_rule_1_1_2_7_1
+  tags:
+      - level2-server
+      - level2-workstation
+      - manual
+      - patch
+      - rule_1.1.2.7.1
+      - varlogaudit
+      - partition
+
+- name: "1.1.2.7.2 | PATCH | Ensure nodev option set on /var/log/audit partition"
+  block:
+      - name: "1.1.2.7.2 | PATCH | Check if /var/log/audit is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/log/audit
+        register: var_log_audit_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.7.2 | PATCH | Ensure nodev option is set on /var/log/audit partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/var/log/audit\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nodev'
+        when: var_log_audit_mount.rc == 0
+        notify: Remount_var_log_audit
+
+      - name: "1.1.2.7.2 | PATCH | Ensure /var/log/audit is mounted with nodev option"
+        ansible.posix.mount:
+            path: /var/log/audit
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log/audit') | map(attribute='device') | list | first) | default('none') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log/audit') | map(attribute='fstype') | list | first) | default('ext4') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: var_log_audit_mount.rc == 0
+  when: debian11cis_rule_1_1_2_7_2
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.7.2
+      - varlogaudit
+      - nodev
+
+- name: "1.1.2.7.3 | PATCH | Ensure nosuid option set on /var/log/audit partition"
+  block:
+      - name: "1.1.2.7.3 | PATCH | Check if /var/log/audit is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/log/audit
+        register: var_log_audit_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.7.3 | PATCH | Ensure nosuid option is set on /var/log/audit partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/var/log/audit\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,nosuid'
+        when: var_log_audit_mount.rc == 0
+        notify: Remount_var_log_audit
+
+      - name: "1.1.2.7.3 | PATCH | Ensure /var/log/audit is mounted with nosuid option"
+        ansible.posix.mount:
+            path: /var/log/audit
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log/audit') | map(attribute='device') | list | first) | default('none') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log/audit') | map(attribute='fstype') | list | first) | default('ext4') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: var_log_audit_mount.rc == 0
+  when: debian11cis_rule_1_1_2_7_3
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.7.3
+      - varlogaudit
+      - nosuid
+
+- name: "1.1.2.7.4 | PATCH | Ensure noexec option set on /var/log/audit partition"
+  block:
+      - name: "1.1.2.7.4 | PATCH | Check if /var/log/audit is a separate partition"
+        ansible.builtin.command: findmnt -kn /var/log/audit
+        register: var_log_audit_mount
+        changed_when: false
+        failed_when: false
+
+      - name: "1.1.2.7.4 | PATCH | Ensure noexec option is set on /var/log/audit partition in /etc/fstab"
+        ansible.builtin.replace:
+            path: /etc/fstab
+            regexp: '^(\S+\s+/var/log/audit\s+\S+\s+)([^#\n]*)'
+            replace: '\1\2,noexec'
+        when: var_log_audit_mount.rc == 0
+        notify: Remount_var_log_audit
+
+      - name: "1.1.2.7.4 | PATCH | Ensure /var/log/audit is mounted with noexec option"
+        ansible.posix.mount:
+            path: /var/log/audit
+            src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log/audit') | map(attribute='device') | list | first) | default('none') }}"
+            fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log/audit') | map(attribute='fstype') | list | first) | default('ext4') }}"
+            opts: defaults,rw,nosuid,nodev,noexec,relatime
+            state: mounted
+        when: var_log_audit_mount.rc == 0
+  when: debian11cis_rule_1_1_2_7_4
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.1.2.7.4
+      - varlogaudit
+      - noexec
+
+- name: "1.2.1 | AUDIT | Ensure package manager repositories are configured"
+  block:
+      - name: "1.2.1 | AUDIT | Ensure package manager repositories are configured | Get repositories"
+        ansible.builtin.shell: apt-cache policy
+        changed_when: false
+        failed_when: false
+        register: apt_repos
+
+      - name: "1.2.1 | AUDIT | Ensure package manager repositories are configured | Message out repository configs"
+        ansible.builtin.debug:
+            msg:
+                - "Warning!! Below are the apt package repositories configured on the system."
+                - "Please review them to make sure they conform to your site's policies."
+                - "{{ apt_repos.stdout_lines }}"
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - audit
+      - rule_1.2.1
+      - apt
+
+- name: "1.2.2 | AUDIT | Ensure GPG keys are configured"
+  block:
+      - name: "1.2.2 | AUDIT | Ensure GPG keys are configured | Get apt GPG keys"
+        ansible.builtin.shell: apt-key list
+        changed_when: false
+        failed_when: false
+        register: apt_gpg_keys
+
+      - name: "1.2.2 | AUDIT | Ensure GPG keys are configured | Message out apt GPG keys"
+        ansible.builtin.debug:
+            msg:
+                - "Warning!! Below are the apt GPG keys configured on the system."
+                - "Please review them to make sure they are configured according to site policy."
+                - "{{ apt_gpg_keys.stdout_lines }}"
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - audit
+      - rule_1.2.2
+      - gpg
+      - keys
+
+- name: "1.2.3 | PATCH | Ensure package manager repositories are updated"
+  ansible.builtin.apt:
+      update_cache: yes
+  when:
+      - ansible_os_family == "Debian"
+      - debian11cis_rule_1_2_3 | default(true)
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.2.3
+      - apt
+      - update
+
+- name: "1.2.4 | PATCH | Ensure package manager installs only from approved repositories"
+  block:
+      - name: "1.2.4 | PATCH | Check repository origin for installed packages"
+        ansible.builtin.shell: apt-cache policy | grep "http" | grep -v "security.debian.org"
+        changed_when: false
+        failed_when: false
+        register: repo_origin_check
+
+      - name: "1.2.4 | PATCH | Display non-approved repositories"
+        ansible.builtin.debug:
+            msg:
+                - "The following repositories are NOT from approved sources:"
+                - "{{ repo_origin_check.stdout_lines | default(['None found']) }}"
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - manual
+      - patch
+      - rule_1.2.4
+      - repositories
+
+- name: "1.2.3 | AUDIT | Ensure GPG keys are configured"
+  block:
+      - name: "1.2.3 | AUDIT | Ensure GPG keys are configured | Get APT GPG keys"
+        ansible.builtin.shell: apt-key list
+        changed_when: false
+        failed_when: false
+        register: apt_gpg_keys
+
+      - name: "1.2.3 | AUDIT | Ensure GPG keys are configured | Display configured GPG keys"
+        ansible.builtin.debug:
+            msg:
+                - "Below are the GPG keys currently configured for APT."
+                - "Please verify that they are configured according to your site policy."
+                - "{{ apt_gpg_keys.stdout_lines }}"
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - manual
+      - audit
+      - rule_1.2.3
+      - apt
+      - gpg
+      - keys
+
+- name: "1.2.4 | PATCH | Ensure apt is configured to prevent installation without verification of a recognized and approved digital signature"
+  block:
+      - name: "1.2.4 | PATCH | Check if AllowUnauthenticated is set in apt configuration"
+        ansible.builtin.shell: grep -r "AllowUnauthenticated" /etc/apt/apt.conf.d/ || true
+        changed_when: false
+        failed_when: false
+        register: apt_allowunauth
+
+      - name: "1.2.4 | PATCH | Display current AllowUnauthenticated settings"
+        ansible.builtin.debug:
+            msg:
+                - "Below are the current AllowUnauthenticated configurations found:"
+                - "{{ apt_allowunauth.stdout_lines | default(['No AllowUnauthenticated entries found.']) }}"
+
+      - name: "1.2.4 | PATCH | Ensure AllowUnauthenticated is set to false in apt configuration"
+        ansible.builtin.replace:
+            path: "{{ item }}"
+            regexp: '^(.*AllowUnauthenticated\s+)"true"(.*)$'
+            replace: '\1"false"\2'
+        with_fileglob:
+            - "/etc/apt/apt.conf.d/*"
+        notify: Update_apt_cache
+
+      - name: "1.2.4 | PATCH | Ensure AllowUnauthenticated directive exists if missing"
+        ansible.builtin.lineinfile:
+            path: "/etc/apt/apt.conf.d/99-unauthenticated.conf"
+            line: 'APT::Get::AllowUnauthenticated "false";'
+            create: yes
+  when: ansible_os_family == "Debian"
+  tags:
+      - stig
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.2.4
+      - apt
+      - signature
+      - gpg
+
+- name: "1.2.5 | PATCH | Ensure the Advance Package Tool removes all software components after updated versions have been installed"
+  block:
+      - name: "1.2.5 | PATCH | Check current APT unattended-upgrades configuration for removal settings"
+        ansible.builtin.shell: grep -i remove-unused /etc/apt/apt.conf.d/50unattended-upgrades || true
+        changed_when: false
+        failed_when: false
+        register: apt_remove_unused_check
+
+      - name: "1.2.5 | PATCH | Display current remove-unused settings"
+        ansible.builtin.debug:
+            msg:
+                - "Current configuration in /etc/apt/apt.conf.d/50unattended-upgrades:"
+                - "{{ apt_remove_unused_check.stdout_lines | default(['No remove-unused entries found.']) }}"
+
+      - name: "1.2.5 | PATCH | Ensure Remove-Unused-Dependencies and Remove-Unused-Kernel-Packages are enabled"
+        ansible.builtin.blockinfile:
+            path: /etc/apt/apt.conf.d/50unattended-upgrades
+            block: |
+                Unattended-Upgrade::Remove-Unused-Dependencies "true";
+                Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+            marker: "# {mark} CIS 1.2.5 Ensure automatic removal of old packages"
+            create: yes
+  when: ansible_os_family == "Debian"
+  tags:
+      - stig
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.2.5
+      - apt
+      - unattended-upgrades
+      - cleanup
+
+- name: "1.3.1 | PATCH | Ensure AIDE is installed"
+  block:
+      - name: "1.3.1 | PATCH | Install AIDE packages"
+        ansible.builtin.package:
+            name:
+                - aide
+                - aide-common
+            state: present
+            update_cache: true
+
+      - name: "1.3.1 | PATCH | Initialize AIDE database"
+        ansible.builtin.shell: |
+            aideinit && mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
+        args:
+            creates: /var/lib/aide/aide.db
+        changed_when: false
+        failed_when: false
+        when: not ansible_check_mode
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.3.1
+      - aide
+
+- name: "1.3.2 | PATCH | Ensure filesystem integrity is regularly checked"
+  block:
+      - name: "1.3.2 | PATCH | Schedule AIDE integrity check"
+        ansible.builtin.cron:
+            name: "Run AIDE integrity check"
+            user: root
+            minute: "0"
+            hour: "5"
+            day: "*"
+            month: "*"
+            weekday: "*"
+            job: "/usr/bin/aide.wrapper --check"
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.3.2
+      - aide
+      - cron
+
+- name: "1.4.1 | PATCH | Ensure bootloader password is set"
+  block:
+      - name: "1.4.1 | PATCH | Ensure bootloader password is set | Create GRUB user configuration"
+        ansible.builtin.copy:
+            dest: /etc/grub.d/00_user
+            owner: root
+            group: root
+            mode: '0755'
+            content: |
+                cat <<EOF
+                set superusers="admin"
+                password_pbkdf2 admin grub.pbkdf2.sha512.10000.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+                EOF
+
+      - name: "1.4.1 | PATCH | Ensure bootloader password is set | Allow unrestricted boot for normal users"
+        ansible.builtin.lineinfile:
+            path: /etc/grub.d/10_linux
+            regexp: '(^CLASS="--class gnu-linux --class gnu --class os).*"$'
+            line: '\g<1> --unrestricted"'
+            backrefs: true
+            create: false
+
+      - name: "1.4.1 | PATCH | Ensure bootloader password is set | Update GRUB configuration"
+        ansible.builtin.command: update-grub
+        register: grub_update
+        changed_when: grub_update.rc == 0
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.4.1
+      - grub
+      - password
+
+- name: "1.4.2 | PATCH | Ensure permissions on bootloader config are configured"
+  block:
+      - name: "1.4.2 | AUDIT | Check if GRUB configuration exists"
+        ansible.builtin.stat:
+            path: /boot/grub/grub.cfg
+        register: grub_cfg_status
+
+      - name: "1.4.2 | PATCH | Set secure permissions on GRUB configuration"
+        ansible.builtin.file:
+            path: /boot/grub/grub.cfg
+            owner: root
+            group: root
+            mode: '0600'
+        when: grub_cfg_status.stat.exists
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.4.2
+      - grub
+      - permissions
+
+- name: "1.4.3 | PATCH | Ensure authentication required for single user mode"
+  block:
+      - name: "1.4.3 | PATCH | Ensure single-user mode requires authentication"
+        ansible.builtin.lineinfile:
+            path: /etc/systemd/system/rescue.service
+            regexp: '^ExecStart='
+            line: 'ExecStart=-/bin/sh -c "/sbin/sulogin; /bin/systemctl --fail --no-block default"'
+            create: false
+
+      - name: "1.4.3 | PATCH | Ensure emergency mode requires authentication"
+        ansible.builtin.lineinfile:
+            path: /etc/systemd/system/emergency.service
+            regexp: '^ExecStart='
+            line: 'ExecStart=-/bin/sh -c "/sbin/sulogin; /bin/systemctl --fail --no-block default"'
+            create: false
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.4.3
+      - grub
+      - sulogin
+      - authentication
+
+- name: "1.4.4 | PATCH | Ensure prelink is not installed"
+  block:
+      - name: "1.4.4 | AUDIT | Check if prelink is installed"
+        ansible.builtin.shell: dpkg-query -W -f='${binary:Package}\t${db:Status-Status}\n' prelink 2>/dev/null || true
+        changed_when: false
+        failed_when: false
+        register: prelink_check
+
+      - name: "1.4.4 | PATCH | Display current prelink installation status"
+        ansible.builtin.debug:
+            msg:
+                - "Prelink package status:"
+                - "{{ prelink_check.stdout_lines | default(['Package not found']) }}"
+
+      - name: "1.4.4 | PATCH | Restore binaries to normal if prelink is installed"
+        ansible.builtin.shell: prelink -ua
+        args:
+            warn: false
+        when: "'installed' in prelink_check.stdout"
+        changed_when: false
+        failed_when: false
+
+      - name: "1.4.4 | PATCH | Ensure prelink package is removed"
+        ansible.builtin.package:
+            name: prelink
+            state: absent
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.4.4
+      - prelink
+      - packages
+      - security
+
+- name: "1.4.5 | PATCH | Ensure maxlogins is 10 or less"
+  block:
+      - name: "1.4.5 | AUDIT | Check current maxlogins setting in limits.conf"
+        ansible.builtin.shell: grep -E '^\*.*hard.*maxlogins' /etc/security/limits.conf || true
+        changed_when: false
+        failed_when: false
+        register: maxlogins_check
+
+      - name: "1.4.5 | PATCH | Display current maxlogins configuration"
+        ansible.builtin.debug:
+            msg:
+                - "Current maxlogins configuration in /etc/security/limits.conf:"
+                - "{{ maxlogins_check.stdout_lines | default(['No configuration found']) }}"
+
+      - name: "1.4.5 | PATCH | Ensure maxlogins is configured to 10 or less"
+        ansible.builtin.lineinfile:
+            path: /etc/security/limits.conf
+            regexp: '^\*.*hard.*maxlogins'
+            line: '* hard maxlogins 10'
+            create: false
+            insertafter: BOF
+  when: ansible_os_family == "Debian"
+  tags:
+      - stig
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.4.5
+      - pam
+      - limits
+      - logins
+
+- name: "1.4.6 | PATCH | Ensure Automatic Error Reporting is not enabled"
+  block:
+      - name: "1.4.6 | AUDIT | Check if apport package is installed"
+        ansible.builtin.shell: dpkg-query -s apport 2>/dev/null | grep -i 'Status' || true
+        changed_when: false
+        failed_when: false
+        register: apport_status
+
+      - name: "1.4.6 | PATCH | Display apport package status"
+        ansible.builtin.debug:
+            msg:
+                - "Apport package status:"
+                - "{{ apport_status.stdout_lines | default(['Apport not installed']) }}"
+
+      - name: "1.4.6 | PATCH | Disable apport in /etc/default/apport if present"
+        ansible.builtin.lineinfile:
+            path: /etc/default/apport
+            regexp: '^\s*enabled\s*='
+            line: 'enabled=0'
+            create: false
+        when: "'installed' in apport_status.stdout"
+
+      - name: "1.4.6 | PATCH | Stop and disable apport service"
+        ansible.builtin.systemd:
+            name: apport.service
+            state: stopped
+            enabled: false
+        when: "'installed' in apport_status.stdout"
+
+      - name: "1.4.6 | PATCH | Ensure apport package is removed"
+        ansible.builtin.package:
+            name: apport
+            state: absent
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.4.6
+      - apport
+      - error-reporting
+      - services
+      - privacy
+
+- name: "1.4.7 | PATCH | Ensure kdump service is not enabled"
+  block:
+      - name: "1.4.7 | AUDIT | Check if kdump service is active"
+        ansible.builtin.shell: systemctl is-active kdump.service 2>/dev/null || true
+        changed_when: false
+        failed_when: false
+        register: kdump_status
+
+      - name: "1.4.7 | PATCH | Display current kdump service status"
+        ansible.builtin.debug:
+            msg:
+                - "Current kdump.service status:"
+                - "{{ kdump_status.stdout | default('Service not found') }}"
+
+      - name: "1.4.7 | PATCH | Disable and stop kdump service if active"
+        ansible.builtin.systemd:
+            name: kdump.service
+            state: stopped
+            enabled: false
+        when: "'active' in kdump_status.stdout"
+
+      - name: "1.4.7 | PATCH | Mask kdump service to prevent accidental reactivation"
+        ansible.builtin.systemd:
+            name: kdump.service
+            masked: true
+        when: "'active' in kdump_status.stdout or 'inactive' in kdump_status.stdout"
+  when: ansible_os_family == "Debian"
+  tags:
+      - stig
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.4.7
+      - kdump
+      - services
+      - security
+
+- name: "1.4.8 | PATCH | Ensure core dumps are restricted"
+  block:
+      - name: "1.4.8 | PATCH | Ensure hard limit for core dumps is set to 0"
+        ansible.builtin.lineinfile:
+            path: /etc/security/limits.conf
+            regexp: '^\*.*hard.*core'
+            line: '* hard core 0'
+            create: false
+            insertafter: EOF
+
+      - name: "1.4.8 | PATCH | Ensure fs.suid_dumpable is set to 0 in sysctl configuration"
+        ansible.posix.sysctl:
+            name: fs.suid_dumpable
+            value: '0'
+            sysctl_set: true
+            state: present
+            reload: true
+
+      - name: "1.4.8 | AUDIT | Check if systemd-coredump is installed"
+        ansible.builtin.shell: systemctl is-enabled coredump.service 2>/dev/null || true
+        changed_when: false
+        failed_when: false
+        register: coredump_status
+
+      - name: "1.4.8 | PATCH | Restrict systemd-coredump if installed"
+        block:
+            - name: "1.4.8 | PATCH | Configure /etc/systemd/coredump.conf"
+              ansible.builtin.blockinfile:
+                  path: /etc/systemd/coredump.conf
+                  create: true
+                  owner: root
+                  group: root
+                  mode: '0644'
+                  block: |
+                      [Coredump]
+                      Storage=none
+                      ProcessSizeMax=0
+
+            - name: "1.4.8 | PATCH | Reload systemd daemon"
+              ansible.builtin.command: systemctl daemon-reload
+              changed_when: false
+        when: "'enabled' in coredump_status.stdout or 'disabled' in coredump_status.stdout or 'masked' in coredump_status.stdout"
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.4.8
+      - core
+      - dumps
+      - sysctl
+      - limits
+
+- name: "1.4.9 | PATCH | Ensure the Ctrl-Alt-Delete key sequence is disabled"
+  block:
+      - name: "1.4.9 | AUDIT | Check status of ctrl-alt-del.target"
+        ansible.builtin.shell: systemctl is-enabled ctrl-alt-del.target 2>/dev/null || true
+        changed_when: false
+        failed_when: false
+        register: ctrl_alt_del_status
+
+      - name: "1.4.9 | PATCH | Display current Ctrl-Alt-Delete target status"
+        ansible.builtin.debug:
+            msg:
+                - "Current ctrl-alt-del.target status:"
+                - "{{ ctrl_alt_del_status.stdout | default('Not present') }}"
+
+      - name: "1.4.9 | PATCH | Mask ctrl-alt-del.target to disable reboot key sequence"
+        ansible.builtin.systemd:
+            name: ctrl-alt-del.target
+            masked: true
+
+      - name: "1.4.9 | PATCH | Reload systemd daemon after masking ctrl-alt-del.target"
+        ansible.builtin.command: systemctl daemon-reload
+        changed_when: false
+  when: ansible_os_family == "Debian"
+  tags:
+      - stig
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.4.9
+      - ctrl-alt-del
+      - reboot
+      - systemd
+
+
+- name: "1.4.10 | PATCH | Ensure dmesg_restrict is enabled"
+  block:
+      - name: "1.4.10 | PATCH | Ensure kernel.dmesg_restrict is set to 1 in sysctl configuration"
+        ansible.posix.sysctl:
+            name: kernel.dmesg_restrict
+            value: '1'
+            sysctl_set: true
+            state: present
+            reload: true
+
+      - name: "1.4.10 | AUDIT | Verify current kernel.dmesg_restrict value"
+        ansible.builtin.shell: sysctl kernel.dmesg_restrict | awk '{print $3}'
+        changed_when: false
+        failed_when: false
+        register: dmesg_restrict_status
+
+      - name: "1.4.10 | PATCH | Display current dmesg_restrict status"
+        ansible.builtin.debug:
+            msg:
+                - "Current kernel.dmesg_restrict value: {{ dmesg_restrict_status.stdout | default('Unknown') }}"
+                - "Expected value: 1 (restricts non-root users from accessing kernel logs)"
+  when: ansible_os_family == "Debian"
+  tags:
+      - stig
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.4.10
+      - sysctl
+      - kernel
+      - dmesg
+      - security
+
+- name: "1.6.1 | PATCH | Ensure message of the day is configured properly"
+  block:
+      - name: "1.6.1 | AUDIT | Check /etc/motd for OS version or release information"
+        ansible.builtin.shell: >
+          grep -Eis "(\\\v|\\\r|\\\m|\\\s|$(grep '^ID=' /etc/os-release | cut -d= -f2 | sed -e 's/\"//g'))" /etc/motd || true
+        changed_when: false
+        failed_when: false
+        register: motd_check
+
+      - name: "1.6.1 | PATCH | Display current /etc/motd findings"
+        ansible.builtin.debug:
+            msg:
+                - "Current /etc/motd contains potentially sensitive or system-identifying information:"
+                - "{{ motd_check.stdout_lines | default(['No OS-related strings found']) }}"
+
+      - name: "1.6.1 | PATCH | Configure compliant Message of the Day"
+        ansible.builtin.copy:
+            dest: /etc/motd
+            owner: root
+            group: root
+            mode: '0644'
+            content: |
+                ******************************************************************
+                * WARNING: Authorized use only.                                 *
+                * All activity may be monitored and reported.                   *
+                * Disconnect immediately if you are not an authorized user.     *
+                ******************************************************************
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.6.1
+      - motd
+      - banner
+      - login
+      - security
+
+- name: "1.6.2 | PATCH | Ensure local login warning banner is configured properly"
+  block:
+      - name: "1.6.2 | AUDIT | Check /etc/issue for OS version or release information"
+        ansible.builtin.shell: >
+          grep -Eis "(\\\v|\\\r|\\\m|\\\s|$(grep '^ID=' /etc/os-release | cut -d= -f2 | sed -e 's/\"//g'))" /etc/issue || true
+        changed_when: false
+        failed_when: false
+        register: issue_check
+
+      - name: "1.6.2 | PATCH | Display current /etc/issue findings"
+        ansible.builtin.debug:
+            msg:
+                - "Current /etc/issue contains potentially sensitive or system-identifying information:"
+                - "{{ issue_check.stdout_lines | default(['No OS-related strings found']) }}"
+
+      - name: "1.6.2 | PATCH | Configure compliant local login warning banner"
+        ansible.builtin.copy:
+            dest: /etc/issue
+            owner: root
+            group: root
+            mode: '0644'
+            content: |
+                ******************************************************************
+                * WARNING: Authorized access only.                               *
+                * All activities on this system are monitored and recorded.      *
+                * Disconnect immediately if you are not an authorized user.     *
+                ******************************************************************
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.6.2
+      - issue
+      - banner
+      - login
+      - security
+
+- name: "1.6.3 | PATCH | Ensure remote login warning banner is configured properly"
+  block:
+      - name: "1.6.3 | AUDIT | Check /etc/issue.net for OS version or release information"
+        ansible.builtin.shell: >
+          grep -Eis "(\\\v|\\\r|\\\m|\\\s|$(grep '^ID=' /etc/os-release | cut -d= -f2 | sed -e 's/\"//g'))" /etc/issue.net || true
+        changed_when: false
+        failed_when: false
+        register: issue_net_check
+
+      - name: "1.6.3 | PATCH | Display current /etc/issue.net findings"
+        ansible.builtin.debug:
+            msg:
+                - "Current /etc/issue.net contains potentially sensitive or system-identifying information:"
+                - "{{ issue_net_check.stdout_lines | default(['No OS-related strings found']) }}"
+
+      - name: "1.6.3 | PATCH | Configure compliant remote login warning banner"
+        ansible.builtin.copy:
+            dest: /etc/issue.net
+            owner: root
+            group: root
+            mode: '0644'
+            content: |
+                ******************************************************************
+                * WARNING: Authorized access only.                               *
+                * Remote connections are monitored and recorded.                 *
+                * Disconnect immediately if you are not an authorized user.     *
+                ******************************************************************
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.6.3
+      - issue.net
+      - banner
+      - ssh
+      - login
+      - security
+
+- name: "1.6.4 | PATCH | Ensure permissions on /etc/motd are configured"
+  block:
+      - name: "1.6.4 | AUDIT | Check if /etc/motd exists"
+        ansible.builtin.stat:
+            path: /etc/motd
+        register: motd_status
+
+      - name: "1.6.4 | PATCH | Set ownership and permissions on /etc/motd if it exists"
+        ansible.builtin.file:
+            path: /etc/motd
+            owner: root
+            group: root
+            mode: '0644'
+        when: motd_status.stat.exists
+
+      - name: "1.6.4 | AUDIT | Display message if /etc/motd does not exist"
+        ansible.builtin.debug:
+            msg: "/etc/motd file does not exist — no action required."
+        when: not motd_status.stat.exists
+  when: ansible_os_family == "Debian"
+  tags:
+      - level1-server
+      - level1-workstation
+      - automated
+      - patch
+      - rule_1.6.4
+      - motd
+      - permissions
+      - security
