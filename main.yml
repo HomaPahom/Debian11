@@ -17,6 +17,11 @@
     - name: "Include 5.x | Access, Authentication, SSH, and Sudo Configuration"
       ansible.builtin.include_tasks: tasks/05_access_auth_ssh_sudo.yml
 
+    - name: "Include 1.x | Access"
+      ansible.builtin.include_tasks: tasks/01_me.yml
+
+
+      
   handlers:
     - name: Restart timeservice
       ansible.builtin.systemd:
@@ -37,3 +42,27 @@
       ansible.builtin.service:
         name: ssh
         state: restarted
+
+    - name: Remount_tmp
+      ansible.builtin.command: mount -o remount /tmp
+
+    - name: Remount_dev_shm
+      ansible.builtin.command: mount -o remount /dev/shm
+  
+    - name: Remount_home
+      ansible.builtin.command: mount -o remount /home
+      
+    - name: Remount_var_tmp
+      ansible.builtin.command: mount -o remount /var/tmp
+  
+    - name: Remount_var_log
+      ansible.builtin.command: mount -o remount /var/log
+  
+    - name: Remount_var_log_audit
+      ansible.builtin.command: mount -o remount /var/log/audit
+  
+    - name: Update_apt_cache
+      ansible.builtin.apt:
+        update_cache: yes
+
+
