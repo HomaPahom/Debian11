@@ -727,7 +727,7 @@
     - name: "1.1.2.6.1 | PATCH | Create bind mount for /var/log if not a separate partition"
       ansible.posix.mount:
         path: /var/log
-        src: /var
+        src: /var/log
         fstype: none
         opts: bind
         state: mounted
@@ -745,7 +745,7 @@
       ansible.builtin.lineinfile:
         path: /etc/fstab
         regexp: '^\S+\s+/var/log\s+'
-        line: '/var /var/log none bind,nodev,nosuid,noexec,relatime 0 0'
+        line: '/var/log /var/log none bind,nodev,nosuid,noexec,relatime 0 0'
         create: yes
   tags:
     - level2-server
