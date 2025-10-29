@@ -528,13 +528,13 @@
 
 - name: "1.1.2.3.2 | PATCH | Ensure nodev option set on /home partition"
   block:
-    - name: "1.1.2.3.2 | PATCH | Check if /home is a separate partition"
+    - name: "Check if /home is a separate partition"
       ansible.builtin.command: findmnt -kn /home
       register: home_mount
       changed_when: false
       failed_when: false
 
-    - name: "1.1.2.3.2 | PATCH | Ensure /home directory exists"
+    - name: "Ensure /home directory exists"
       ansible.builtin.file:
         path: /home
         state: directory
@@ -542,29 +542,22 @@
         group: root
         mode: '0755'
 
-    - name: "1.1.2.3.2 | PATCH | Create bind mount for /home if not a separate partition"
+    - name: "Ensure nodev option set on /home partition (if it exists)"
       ansible.posix.mount:
         path: /home
-        src: /
-        fstype: none
-        opts: bind
+        src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='device') | list | first) | default('none') }}"
+        fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='fstype') | list | first) | default('ext4') }}"
+        opts: nodev,nosuid,relatime
         state: mounted
-      when: home_mount.rc != 0
+      when: home_mount.rc == 0
 
-    - name: "1.1.2.3.2 | PATCH | Ensure nodev option set on /home partition"
-      ansible.posix.mount:
-        path: /home
-        src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='device') | list | first) | default('/') }}"
-        fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='fstype') | list | first) | default('none') }}"
-        opts: bind,nodev,nosuid,relatime
-        state: mounted
-
-    - name: "1.1.2.3.2 | PATCH | Ensure /home entry exists in /etc/fstab"
+    - name: "Ensure /home entry exists in /etc/fstab (if partition exists)"
       ansible.builtin.lineinfile:
         path: /etc/fstab
         regexp: '^\S+\s+/home\s+'
-        line: '/ none /home bind,nodev,nosuid,relatime 0 0'
+        line: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='device') | list | first) | default('UUID=none') }} /home ext4 nodev,nosuid,relatime 0 2"
         create: yes
+      when: home_mount.rc == 0
   tags:
     - level1-server
     - level1-workstation
@@ -575,26 +568,28 @@
 
 - name: "1.1.2.3.3 | PATCH | Ensure nosuid option set on /home partition"
   block:
-    - name: "1.1.2.3.3 | PATCH | Check if /home is a separate partition"
+    - name: "Check if /home is a separate partition"
       ansible.builtin.command: findmnt -kn /home
       register: home_mount
       changed_when: false
       failed_when: false
 
-    - name: "1.1.2.3.3 | PATCH | Ensure /home is mounted with nosuid,nodev"
+    - name: "Ensure /home is mounted with nosuid,nodev (if separate partition exists)"
       ansible.posix.mount:
         path: /home
-        src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='device') | list | first) | default('/') }}"
-        fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='fstype') | list | first) | default('none') }}"
-        opts: bind,nodev,nosuid,relatime
+        src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='device') | list | first) | default('none') }}"
+        fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='fstype') | list | first) | default('ext4') }}"
+        opts: nodev,nosuid,relatime
         state: mounted
+      when: home_mount.rc == 0
 
-    - name: "1.1.2.3.3 | PATCH | Ensure /home entry exists in /etc/fstab"
+    - name: "Ensure /home entry exists in /etc/fstab (if separate partition exists)"
       ansible.builtin.lineinfile:
         path: /etc/fstab
         regexp: '^\S+\s+/home\s+'
-        line: '/ none /home bind,nodev,nosuid,relatime 0 0'
+        line: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/home') | map(attribute='device') | list | first) | default('UUID=none') }} /home ext4 nodev,nosuid,relatime 0 2"
         create: yes
+      when: home_mount.rc == 0
   tags:
     - level1-server
     - level1-workstation
@@ -727,7 +722,7 @@
     - name: "1.1.2.6.1 | PATCH | Create bind mount for /var/log if not a separate partition"
       ansible.posix.mount:
         path: /var/log
-        src: /var/log
+        src: /var
         fstype: none
         opts: bind
         state: mounted
@@ -745,7 +740,7 @@
       ansible.builtin.lineinfile:
         path: /etc/fstab
         regexp: '^\S+\s+/var/log\s+'
-        line: '/var/log /var/log none bind,nodev,nosuid,noexec,relatime 0 0'
+        line: '/var /var/log none bind,nodev,nosuid,noexec,relatime 0 0'
         create: yes
   tags:
     - level2-server
@@ -764,6 +759,7 @@
         fstype: none
         opts: bind,nodev,nosuid,noexec,relatime
         state: mounted
+      when: var_log_mount.rc != 0
   tags:
     - level1-server
     - level1-workstation
@@ -781,6 +777,7 @@
         fstype: none
         opts: bind,nodev,nosuid,noexec,relatime
         state: mounted
+      when: var_log_mount.rc != 0
   tags:
     - level1-server
     - level1-workstation
@@ -798,6 +795,7 @@
         fstype: none
         opts: bind,nodev,nosuid,noexec,relatime
         state: mounted
+      when: var_log_mount.rc != 0
   tags:
     - level1-server
     - level1-workstation
