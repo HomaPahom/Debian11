@@ -5,64 +5,88 @@
   connection: local
 
   tasks:
+    - name: "Include 4.x | Audit and Logging Configuration"
+      ansible.builtin.include_tasks: tasks/04_audit_and_logs.yml
+
+    - name: "Include 1.x | Access"
+      ansible.builtin.include_tasks: tasks/01_me.yml
+
     - name: "Include 2.x | Services and Time Synchronization"
       ansible.builtin.include_tasks: tasks/02_services_time_sync.yml
 
     - name: "Include 3.x | Network and Firewall Hardening"
       ansible.builtin.include_tasks: tasks/03_network_firewall.yml
 
-    - name: "Include 4.x | Audit and Logging Configuration"
-      ansible.builtin.include_tasks: tasks/04_audit_and_logs.yml
+    #- name: "Include 4.x | Audit and Logging Configuration"
+     # ansible.builtin.include_tasks: tasks/04_audit_and_logs.yml
 
     - name: "Include 5.x | Access, Authentication, SSH, and Sudo Configuration"
       ansible.builtin.include_tasks: tasks/05_access_auth_ssh_sudo.yml
 
-    - name: "Include 1.x | Access"
-      ansible.builtin.include_tasks: tasks/01_me.yml
-
-
-      
   handlers:
-    - name: Restart timeservice
-      ansible.builtin.systemd:
-        name: systemd-timesyncd
-        state: restarted
-
-    - name: Restart journald
-      ansible.builtin.systemd:
-        name: systemd-journald
-        state: restarted
-
-    - name: Restart syslog service
-      ansible.builtin.systemd:
-        name: rsyslog
-        state: restarted
-
-    - name: restart sshd
-      ansible.builtin.service:
-        name: ssh
-        state: restarted
-
-    - name: Remount_tmp
+    - name: Remount /tmp
+      listen: Remount_tmp
+      become: true
       ansible.builtin.command: mount -o remount /tmp
 
-    - name: Remount_dev_shm
+    - name: Mount /dev/shm
+      listen: Mount_dev_shm
+      become: true
+      ansible.builtin.command: mount /dev/shm
+
+    - name: Remount /dev/shm
+      listen: Remount_dev_shm
+      become: true
       ansible.builtin.command: mount -o remount /dev/shm
-  
-    - name: Remount_home
+
+    - name: Remount /home
+      listen: Remount_home
+      become: true
       ansible.builtin.command: mount -o remount /home
-      
-    - name: Remount_var_tmp
+
+    - name: Remount /var/tmp
+      listen: Remount_var_tmp
+      become: true
       ansible.builtin.command: mount -o remount /var/tmp
-  
-    - name: Remount_var_log
+
+    - name: Remount /var/log
+      listen: Remount_var_log
+      become: true
       ansible.builtin.command: mount -o remount /var/log
-  
-    - name: Remount_var_log_audit
+
+    - name: Remount /var/log/audit
+      listen: Remount_var_log_audit
+      become: true
       ansible.builtin.command: mount -o remount /var/log/audit
-  
-    - name: Update_apt_cache
+
+    - name: Update apt cache
+      listen: Update_apt_cache
       ansible.builtin.apt:
         update_cache: yes
 
+    - name: Update initramfs
+      listen: Update_Initramfs
+      become: true
+      ansible.builtin.command: update-initramfs -u
+      when: ansible_os_family == "Debian"
 
+    - name: Restart journald
+      listen: Restart journald
+      become: true
+      ansible.builtin.systemd:
+        name: systemd-journald.service
+        state: restarted
+
+    - name: Restart rsyslog
+      listen: Restart syslog service
+      become: true
+      ansible.builtin.systemd:
+        name: rsyslog.service
+        state: restarted
+
+    - name: Restart sshd
+      listen: restart sshd
+      become: true
+      ansible.builtin.systemd:
+        name: ssh.service
+        state: restarted
