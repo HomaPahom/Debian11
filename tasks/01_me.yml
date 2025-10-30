@@ -705,13 +705,13 @@
 
 - name: "1.1.2.6.1 | PATCH | Ensure separate partition exists for /var/log"
   block:
-    - name: "1.1.2.6.1 | PATCH | Check if /var/log is a separate partition"
+    - name: Check if /var/log is a separate partition
       ansible.builtin.command: findmnt -kn /var/log
       register: var_log_mount
       changed_when: false
       failed_when: false
 
-    - name: "1.1.2.6.1 | PATCH | Ensure /var/log directory exists"
+    - name: Ensure /var/log directory exists
       ansible.builtin.file:
         path: /var/log
         state: directory
@@ -719,29 +719,29 @@
         group: root
         mode: '0755'
 
-    - name: "1.1.2.6.1 | PATCH | Create bind mount for /var/log if not a separate partition"
+    # ВАЖНО: self-bind, src=/var/log (не /var)
+    - name: Create bind mount for /var/log if not a separate partition
       ansible.posix.mount:
         path: /var/log
-        src: /var
+        src: /var/log
         fstype: none
         opts: bind
         state: mounted
       when: var_log_mount.rc != 0
 
-    - name: "1.1.2.6.1 | PATCH | Ensure secure mount options for /var/log (nodev,nosuid,noexec)"
-      ansible.posix.mount:
-        path: /var/log
-        src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='device') | list | first) | default('/var') }}"
-        fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | list | first) | default('none') }}"
-        opts: bind,nodev,nosuid,noexec,relatime
-        state: mounted
+    # Для bind безопасные опции задаём ремонтом
+    - name: Remount /var/log with secure options
+      ansible.builtin.command: mount -o remount,bind,nodev,nosuid,noexec /var/log
+      changed_when: true
 
-    - name: "1.1.2.6.1 | PATCH | Ensure /var/log entry exists in /etc/fstab"
-      ansible.builtin.lineinfile:
+    # В /etc/fstab — две строки для bind (обычная практика)
+    - name: Ensure /var/log entries exist in /etc/fstab
+      ansible.builtin.blockinfile:
         path: /etc/fstab
-        regexp: '^\S+\s+/var/log\s+'
-        line: '/var /var/log none bind,nodev,nosuid,noexec,relatime 0 0'
-        create: yes
+        marker: "# {mark} CIS /var/log"
+        block: |
+          /var/log  /var/log  none  bind                              0 0
+          /var/log  /var/log  none  remount,bind,nodev,nosuid,noexec  0 0
   tags:
     - level2-server
     - level2-workstation
@@ -806,13 +806,13 @@
 
 - name: "1.1.2.7.1 | PATCH | Ensure separate partition exists for /var/log/audit"
   block:
-    - name: "1.1.2.7.1 | PATCH | Check if /var/log/audit is a separate partition"
+    - name: Check if /var/log/audit is a separate partition
       ansible.builtin.command: findmnt -kn /var/log/audit
       register: var_log_audit_mount
       changed_when: false
       failed_when: false
 
-    - name: "1.1.2.7.1 | PATCH | Ensure /var/log/audit directory exists"
+    - name: Ensure /var/log/audit directory exists
       ansible.builtin.file:
         path: /var/log/audit
         state: directory
@@ -820,29 +820,27 @@
         group: root
         mode: '0750'
 
-    - name: "1.1.2.7.1 | PATCH | Create bind mount for /var/log/audit if not a separate partition"
+    # ВАЖНО: self-bind, src=/var/log/audit (не /var/log)
+    - name: Create bind mount for /var/log/audit if not a separate partition
       ansible.posix.mount:
         path: /var/log/audit
-        src: /var/log
+        src: /var/log/audit
         fstype: none
         opts: bind
         state: mounted
       when: var_log_audit_mount.rc != 0
 
-    - name: "1.1.2.7.1 | PATCH | Ensure secure mount options for /var/log/audit (nodev,nosuid,noexec)"
-      ansible.posix.mount:
-        path: /var/log/audit
-        src: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log/audit') | map(attribute='device') | list | first) | default('/var/log') }}"
-        fstype: "{{ (ansible_mounts | selectattr('mount', 'equalto', '/var/log/audit') | map(attribute='fstype') | list | first) | default('none') }}"
-        opts: bind,nodev,nosuid,noexec,relatime
-        state: mounted
+    - name: Remount /var/log/audit with secure options
+      ansible.builtin.command: mount -o remount,bind,nodev,nosuid,noexec /var/log/audit
+      changed_when: true
 
-    - name: "1.1.2.7.1 | PATCH | Ensure /var/log/audit entry exists in /etc/fstab"
-      ansible.builtin.lineinfile:
+    - name: Ensure /var/log/audit entries exist in /etc/fstab
+      ansible.builtin.blockinfile:
         path: /etc/fstab
-        regexp: '^\S+\s+/var/log/audit\s+'
-        line: '/var/log /var/log/audit none bind,nodev,nosuid,noexec,relatime 0 0'
-        create: yes
+        marker: "# {mark} CIS /var/log/audit"
+        block: |
+          /var/log/audit  /var/log/audit  none  bind                              0 0
+          /var/log/audit  /var/log/audit  none  remount,bind,nodev,nosuid,noexec  0 0
   tags:
     - level2-server
     - level2-workstation
